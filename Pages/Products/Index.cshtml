@@ -1,0 +1,133 @@
+@page
+@model AdminPanel.Pages.Products.IndexModel
+@{
+    ViewData["Title"] = "Productos";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1>Productos</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Productos</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-page="./Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nuevo Producto
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2>Listado de Productos</h2>
+    </div>
+    <div class="admin-card-body">
+        <!-- Filtros y búsqueda -->
+        <form method="get" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                    <div class="input-group">
+                        <input type="text" 
+                               name="searchString" 
+                               value="@Model.CurrentFilter" 
+                               class="form-control" 
+                               placeholder="Buscar por nombre o descripción...">
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <select name="sortOrder" class="form-select" onchange="this.form.submit()">
+                        <option value="">Ordenar por: Nombre (A-Z)</option>
+                        <option value="name_desc" selected="@(Model.CurrentSort == "name_desc")">Nombre (Z-A)</option>
+                        <option value="price" selected="@(Model.CurrentSort == "price")">Precio (Menor a Mayor)</option>
+                        <option value="price_desc" selected="@(Model.CurrentSort == "price_desc")">Precio (Mayor a Menor)</option>
+                        <option value="stock" selected="@(Model.CurrentSort == "stock")">Stock (Menor a Mayor)</option>
+                        <option value="stock_desc" selected="@(Model.CurrentSort == "stock_desc")">Stock (Mayor a Menor)</option>
+                    </select>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.CurrentFilter) || !string.IsNullOrEmpty(Model.CurrentSort))
+                {
+                    <div class="col-auto">
+                        <a asp-page="./Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </a>
+                    </div>
+                }
+            </div>
+        </form>
+
+        <!-- Tabla de datos -->
+        @{
+            ViewData["Columns"] = new List<(string Header, Func<dynamic, object> Cell, string CssClass)>
+            {
+                ("Imagen", (dynamic p) => string.IsNullOrEmpty(p.ImageUrl) 
+                    ? "<div class='bg-secondary text-white d-flex align-items-center justify-content-center' style='width: 50px; height: 50px; border-radius: 4px;'><i class='bi bi-image'></i></div>"
+                    : $"<img src='{p.ImageUrl}' alt='{p.Name}' style='width: 50px; height: 50px; object-fit: cover; border-radius: 4px;'>", 
+                    ""),
+                
+                ("Nombre", (dynamic p) => $"<div><strong>{p.Name}</strong><br><small class='text-muted'>{(p.Description.Length > 50 ? p.Description.Substring(0, 50) + "..." : p.Description)}</small></div>", ""),
+                
+                ("Categoría", (dynamic p) => $"<span class='badge bg-secondary'>{p.Category?.Name ?? "Sin categoría"}</span>", ""),
+                
+                ("Precio", (dynamic p) => $"<strong>${p.Price:N2}</strong>", "text-end"),
+                
+                ("Stock", (dynamic p) => {
+                    var stockClass = p.Stock == 0 ? "danger" : (p.Stock < 10 ? "warning" : "success");
+                    return $"<span class='badge bg-{stockClass}'>{p.Stock}</span>";
+                }, "text-center"),
+                
+                ("Estado", (dynamic p) => p.IsActive 
+                    ? "<span class='badge bg-success'><i class='bi bi-check-circle'></i> Activo</span>"
+                    : "<span class='badge bg-danger'><i class='bi bi-x-circle'></i> Inactivo</span>", 
+                    "text-center"),
+                
+                ("Acciones", (dynamic p) => $@"
+                    <div class='btn-group btn-group-sm' role='group'>
+                        <a href='/Products/Details?id={p.Id}' class='btn btn-outline-primary' title='Ver'>
+                            <i class='bi bi-eye'></i>
+                        </a>
+                        <a href='/Products/Edit?id={p.Id}' class='btn btn-outline-secondary' title='Editar'>
+                            <i class='bi bi-pencil'></i>
+                        </a>
+                        <a href='/Products/Delete?id={p.Id}' class='btn btn-outline-danger' title='Eliminar'>
+                            <i class='bi bi-trash'></i>
+                        </a>
+                    </div>", 
+                    "text-end")
+            };
+
+            ViewData["BaseUrl"] = "/Products/Index";
+            ViewData["CurrentQuery"] = new Dictionary<string, string>
+            {
+                ["searchString"] = Model.CurrentFilter,
+                ["sortOrder"] = Model.CurrentSort
+            };
+        }
+
+        <partial name="_DataTable" model="Model.Products" />
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Confirmación antes de eliminar
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('a[href*="/Delete"]').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    if (!confirm('¿Está seguro de que desea eliminar este producto?')) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
+}

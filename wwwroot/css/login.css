@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .login-gradient-bg {
+    @apply bg-gradient-to-br from-[#667eea] to-[#764ba2];
+  }
+  
+  .login-header-gradient {
+    @apply bg-gradient-to-br from-[#667eea] to-[#764ba2];
+  }
+  
+  .btn-login-gradient {
+    @apply bg-gradient-to-br from-[#667eea] to-[#764ba2];
+  }
+}

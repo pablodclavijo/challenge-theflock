@@ -1,0 +1,19 @@
+@page
+@model AdminPanel.Pages.Account.AccessDeniedModel
+@{
+    ViewData["Title"] = "Acceso Denegado";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex align-items-center justify-content-center" style="min-height: 60vh;">
+    <div class="text-center">
+        <i class="bi bi-shield-x display-1 text-danger mb-4"></i>
+        <h1 class="display-4 mb-3">Acceso Denegado</h1>
+        <p class="lead text-muted mb-4">
+            No tienes permisos para acceder a esta página.
+        </p>
+        <a asp-page="/Index" class="btn btn-primary">
+            <i class="bi bi-house"></i> Volver al Inicio
+        </a>
+    </div>
+</div>

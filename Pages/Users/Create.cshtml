@@ -1,0 +1,141 @@
+@page
+@model AdminPanel.Pages.Users.CreateModel
+@{
+    ViewData["Title"] = "Nuevo Usuario";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-page="./Index">Usuarios</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Nuevo</li>
+        </ol>
+    </nav>
+    <h1>Nuevo Usuario</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2>Información del Usuario</h2>
+            </div>
+            <div class="admin-card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.Email" class="form-label"></label>
+                            <input asp-for="Input.Email" class="form-control" />
+                            <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.FullName" class="form-label"></label>
+                            <input asp-for="Input.FullName" class="form-control" />
+                            <span asp-validation-for="Input.FullName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.Password" class="form-label"></label>
+                            <input asp-for="Input.Password" class="form-control" />
+                            <div class="form-text">Mínimo 6 caracteres, debe incluir mayúsculas y números</div>
+                            <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                            <input asp-for="Input.ConfirmPassword" class="form-control" />
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Role" class="form-label"></label>
+                        <select asp-for="Input.Role" asp-items="Model.RolesList" class="form-select">
+                            <option value="">-- Seleccione un rol --</option>
+                        </select>
+                        <span asp-validation-for="Input.Role" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input asp-for="Input.IsActive" class="form-check-input" />
+                                <label asp-for="Input.IsActive" class="form-check-label"></label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input asp-for="Input.EmailConfirmed" class="form-check-input" />
+                                <label asp-for="Input.EmailConfirmed" class="form-check-label"></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Crear Usuario
+                        </button>
+                        <a asp-page="./Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2>Roles</h2>
+            </div>
+            <div class="admin-card-body">
+                <div class="mb-3">
+                    <h6 class="text-danger"><i class="bi bi-shield-check"></i> Administrador</h6>
+                    <p class="small text-muted mb-0">
+                        Acceso completo al sistema. Puede gestionar productos, pedidos, categorías, usuarios y ver reportes.
+                    </p>
+                </div>
+                <hr>
+                <div>
+                    <h6 class="text-info"><i class="bi bi-person-badge"></i> Vendedor</h6>
+                    <p class="small text-muted mb-0">
+                        Puede gestionar productos y pedidos únicamente.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2>Ayuda</h2>
+            </div>
+            <div class="admin-card-body">
+                <p class="small text-muted mb-2">
+                    <i class="bi bi-info-circle"></i> 
+                    La contraseña debe cumplir con los requisitos de seguridad.
+                </p>
+                <p class="small text-muted mb-2">
+                    <i class="bi bi-info-circle"></i> 
+                    Si la cuenta está inactiva, el usuario no podrá iniciar sesión.
+                </p>
+                <p class="small text-muted mb-0">
+                    <i class="bi bi-info-circle"></i> 
+                    Puedes confirmar el email automáticamente al crear el usuario.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

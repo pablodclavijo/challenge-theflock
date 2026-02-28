@@ -1,0 +1,152 @@
+@model dynamic
+
+@{
+    var items = Model.Items;
+    var pageIndex = Model.PageIndex;
+    var totalPages = Model.TotalPages;
+    var totalCount = Model.TotalCount;
+    var hasPreviousPage = Model.HasPreviousPage;
+    var hasNextPage = Model.HasNextPage;
+    
+    // Columns definition: pass as ViewData["Columns"] 
+    // Format: List<(string Header, Func<dynamic, string> Cell, string? CssClass)>
+    var columns = ViewData["Columns"] as List<(string Header, Func<dynamic, object> Cell, string CssClass)>;
+    
+    // Base URL for pagination
+    var baseUrl = ViewData["BaseUrl"] as string ?? "";
+    
+    // Current query parameters (excluding pageIndex)
+    var currentQuery = ViewData["CurrentQuery"] as Dictionary<string, string> ?? new Dictionary<string, string>();
+    
+    // Build query string helper
+    string BuildQueryString(int page)
+    {
+        var queryParams = new Dictionary<string, string>(currentQuery) { ["pageIndex"] = page.ToString() };
+        return string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
+    }
+}
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                @if (columns != null)
+                {
+                    @foreach (var column in columns)
+                    {
+                        <th class="@column.CssClass">@column.Header</th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @if (items != null && items.Count > 0)
+            {
+                @foreach (var item in items)
+                {
+                    <tr>
+                        @if (columns != null)
+                        {
+                            @foreach (var column in columns)
+                            {
+                                <td class="@column.CssClass">
+                                    @Html.Raw(column.Cell(item))
+                                </td>
+                            }
+                        }
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="@(columns?.Count ?? 1)" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox"></i>
+                        <p class="mb-0 mt-2">No hay datos para mostrar</p>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (totalPages > 1)
+{
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+        <div class="text-muted small">
+            Mostrando página @pageIndex de @totalPages (@totalCount registros totales)
+        </div>
+        
+        <nav aria-label="Paginación de tabla">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(!hasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" 
+                       href="@(hasPreviousPage ? $"{baseUrl}?{BuildQueryString(1)}" : "#")"
+                       aria-label="Primera">
+                        <i class="bi bi-chevron-bar-left"></i>
+                    </a>
+                </li>
+                <li class="page-item @(!hasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" 
+                       href="@(hasPreviousPage ? $"{baseUrl}?{BuildQueryString(pageIndex - 1)}" : "#")"
+                       aria-label="Anterior">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+
+                @{
+                    var startPage = Math.Max(1, pageIndex - 2);
+                    var endPage = Math.Min(totalPages, pageIndex + 2);
+                    
+                    if (startPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@($"{baseUrl}?{BuildQueryString(1)}")">1</a>
+                        </li>
+                        if (startPage > 2)
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        }
+                    }
+
+                    for (var i = startPage; i <= endPage; i++)
+                    {
+                        <li class="page-item @(i == pageIndex ? "active" : "")">
+                            <a class="page-link" href="@($"{baseUrl}?{BuildQueryString(i)}")">@i</a>
+                        </li>
+                    }
+
+                    if (endPage < totalPages)
+                    {
+                        if (endPage < totalPages - 1)
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        }
+                        <li class="page-item">
+                            <a class="page-link" href="@($"{baseUrl}?{BuildQueryString(totalPages)}")">@totalPages</a>
+                        </li>
+                    }
+                }
+
+                <li class="page-item @(!hasNextPage ? "disabled" : "")">
+                    <a class="page-link" 
+                       href="@(hasNextPage ? $"{baseUrl}?{BuildQueryString(pageIndex + 1)}" : "#")"
+                       aria-label="Siguiente">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item @(!hasNextPage ? "disabled" : "")">
+                    <a class="page-link" 
+                       href="@(hasNextPage ? $"{baseUrl}?{BuildQueryString(totalPages)}" : "#")"
+                       aria-label="Última">
+                        <i class="bi bi-chevron-bar-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}

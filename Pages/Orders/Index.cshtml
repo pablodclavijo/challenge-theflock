@@ -1,0 +1,152 @@
+@page
+@using AdminPanel.Enums
+@model AdminPanel.Pages.Orders.IndexModel
+@{
+    ViewData["Title"] = "Pedidos";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1>Pedidos</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Pedidos</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2>Listado de Pedidos</h2>
+    </div>
+    <div class="admin-card-body">
+        <!-- Filtros -->
+        <form method="get" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select name="statusFilter" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos los estados</option>
+                        <option value="@OrderStatus.Pending" selected="@(Model.CurrentStatusFilter == OrderStatus.Pending.ToString())">Pendiente</option>
+                        <option value="@OrderStatus.Confirmed" selected="@(Model.CurrentStatusFilter == OrderStatus.Confirmed.ToString())">Confirmado</option>
+                        <option value="@OrderStatus.Shipped" selected="@(Model.CurrentStatusFilter == OrderStatus.Shipped.ToString())">Enviado</option>
+                        <option value="@OrderStatus.Delivered" selected="@(Model.CurrentStatusFilter == OrderStatus.Delivered.ToString())">Entregado</option>
+                    </select>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.CurrentStatusFilter))
+                {
+                    <div class="col-auto">
+                        <a asp-page="./Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </a>
+                    </div>
+                }
+            </div>
+        </form>
+
+        @{
+            string GetStatusBadge(OrderStatus status)
+            {
+                string badgeClass = status switch
+                {
+                    OrderStatus.Pending => "warning",
+                    OrderStatus.Confirmed => "info",
+                    OrderStatus.Shipped => "primary",
+                    OrderStatus.Delivered => "success",
+                    _ => "secondary"
+                };
+                string statusText = status switch
+                {
+                    OrderStatus.Pending => "Pendiente",
+                    OrderStatus.Confirmed => "Confirmado",
+                    OrderStatus.Shipped => "Enviado",
+                    OrderStatus.Delivered => "Entregado",
+                    _ => status.ToString()
+                };
+                return $"<span class='badge bg-{badgeClass}'>{statusText}</span>";
+            }
+
+            ViewData["Columns"] = new List<(string Header, Func<dynamic, object> Cell, string CssClass)>
+            {
+                ("# Orden", (dynamic o) => $"<strong>#{o.Id}</strong>", ""),
+                
+                ("Cliente", (dynamic o) => $"<div><strong>{o.User?.FullName ?? "N/A"}</strong><br><small class='text-muted'>{o.User?.Email ?? ""}</small></div>", ""),
+                
+                ("Items", (dynamic o) => $"<span class='badge bg-secondary'>{o.Items.Count} item(s)</span>", "text-center"),
+                
+                ("Total", (dynamic o) => $"<strong>${o.Total:N2}</strong>", "text-end"),
+                
+                ("Estado", (dynamic o) => (object)GetStatusBadge((OrderStatus)o.Status), "text-center"),
+                
+                ("Fecha", (dynamic o) => $"<small>{o.CreatedAt:dd/MM/yyyy}<br>{o.CreatedAt:HH:mm}</small>", ""),
+                
+                ("Acciones", (dynamic o) => $@"
+                    <div class='btn-group btn-group-sm' role='group'>
+                        <a href='/Orders/Details?id={o.Id}' class='btn btn-outline-primary' title='Ver'>
+                            <i class='bi bi-eye'></i>
+                        </a>
+                        <a href='/Orders/Edit?id={o.Id}' class='btn btn-outline-secondary' title='Editar'>
+                            <i class='bi bi-pencil'></i>
+                        </a>
+                    </div>", 
+                    "text-end")
+            };
+
+            ViewData["BaseUrl"] = "/Orders/Index";
+            ViewData["CurrentQuery"] = new Dictionary<string, string>
+            {
+                ["statusFilter"] = Model.CurrentStatusFilter
+            };
+        }
+
+        <partial name="_DataTable" model="Model.Orders" />
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-3">
+    <div class="col-6 col-md-3">
+        <div class="admin-card">
+            <div class="admin-card-body text-center">
+                <div class="text-muted small">Pendientes</div>
+                <div class="fs-4 fw-bold text-warning">
+                    @Model.Orders.Items.Count(o => o.Status == OrderStatus.Pending)
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="admin-card">
+            <div class="admin-card-body text-center">
+                <div class="text-muted small">Confirmados</div>
+                <div class="fs-4 fw-bold text-info">
+                    @Model.Orders.Items.Count(o => o.Status == OrderStatus.Confirmed)
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="admin-card">
+            <div class="admin-card-body text-center">
+                <div class="text-muted small">Enviados</div>
+                <div class="fs-4 fw-bold text-primary">
+                    @Model.Orders.Items.Count(o => o.Status == OrderStatus.Shipped)
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="admin-card">
+            <div class="admin-card-body text-center">
+                <div class="text-muted small">Entregados</div>
+                <div class="fs-4 fw-bold text-success">
+                    @Model.Orders.Items.Count(o => o.Status == OrderStatus.Delivered)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
