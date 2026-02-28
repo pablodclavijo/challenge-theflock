@@ -1,0 +1,196 @@
+@model PaginatedList<Product>
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1>Productos</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Productos</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nuevo Producto
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Listado de Productos</h2>
+    </div>
+    <div class="card-body">
+        <!-- Filtros -->
+        <form method="get" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" 
+                           class="form-control" placeholder="Buscar...">
+                </div>
+                <div class="col-md-3">
+                    <select name="categoryId" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todas las categorías</option>
+                        @foreach (var category in (List<SelectListItem>)ViewData["Categories"]!)
+                        {
+                            <option value="@category.Value" selected="@(ViewData["CurrentCategory"]?.ToString() == category.Value)">
+                                @category.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="isActive" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <option value="true" selected="@(ViewData["CurrentStatus"]?.ToString() == "True")">Activos</option>
+                        <option value="false" selected="@(ViewData["CurrentStatus"]?.ToString() == "False")">Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">Buscar</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Tabla -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th class="text-end">Precio</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl" alt="@product.Name" 
+                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                                }
+                                else
+                                {
+                                    <div class="bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                         style="width: 50px; height: 50px; border-radius: 4px;">
+                                        <i class="bi bi-image"></i>
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <strong>@product.Name</strong><br>
+                                <small class="text-muted">
+                                    @(product.Description.Length > 50 ? product.Description.Substring(0, 50) + "..." : product.Description)
+                                </small>
+                            </td>
+                            <td><span class="badge bg-secondary">@product.Category?.Name</span></td>
+                            <td class="text-end"><strong>$@product.Price.ToString("N2")</strong></td>
+                            <td class="text-center">
+                                @{
+                                    var stockClass = product.Stock == 0 ? "danger" : (product.Stock < 10 ? "warning" : "success");
+                                }
+                                <span class="badge bg-@stockClass">@product.Stock</span>
+                            </td>
+                            <td class="text-center">
+                                @if (product.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Inactivo
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Details" asp-route-id="@product.Id" 
+                                       class="btn btn-outline-primary" title="Ver">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@product.Id" 
+                                       class="btn btn-outline-secondary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="AdjustStock" asp-route-id="@product.Id" 
+                                       class="btn btn-outline-info" title="Ajustar Stock">
+                                        <i class="bi bi-box-seam"></i>
+                                    </a>
+                                    <form asp-action="ToggleStatus" asp-route-id="@product.Id" 
+                                          method="post" style="display: inline;">
+                                        <button type="submit" 
+                                                class="btn btn-outline-@(product.IsActive ? "warning" : "success")" 
+                                                title="@(product.IsActive ? "Desactivar" : "Activar")">
+                                            <i class="bi bi-@(product.IsActive ? "x-circle" : "check-circle")"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link" 
+                           asp-action="Index" 
+                           asp-route-searchString="@ViewData["CurrentFilter"]"
+                           asp-route-sortOrder="@ViewData["CurrentSort"]"
+                           asp-route-categoryId="@ViewData["CurrentCategory"]"
+                           asp-route-isActive="@ViewData["CurrentStatus"]"
+                           asp-route-pageIndex="@(Model.PageIndex - 1)">
+                            Anterior
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                            <a class="page-link" 
+                               asp-action="Index" 
+                               asp-route-searchString="@ViewData["CurrentFilter"]"
+                               asp-route-sortOrder="@ViewData["CurrentSort"]"
+                               asp-route-categoryId="@ViewData["CurrentCategory"]"
+                               asp-route-isActive="@ViewData["CurrentStatus"]"
+                               asp-route-pageIndex="@i">
+                                @i
+                            </a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                        <a class="page-link" 
+                           asp-action="Index" 
+                           asp-route-searchString="@ViewData["CurrentFilter"]"
+                           asp-route-sortOrder="@ViewData["CurrentSort"]"
+                           asp-route-categoryId="@ViewData["CurrentCategory"]"
+                           asp-route-isActive="@ViewData["CurrentStatus"]"
+                           asp-route-pageIndex="@(Model.PageIndex + 1)">
+                            Siguiente
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

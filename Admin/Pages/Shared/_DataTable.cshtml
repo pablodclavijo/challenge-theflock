@@ -44,7 +44,7 @@
             {
                 @foreach (var item in items)
                 {
-                    <tr>
+                    <tr data-product-id="@item.Id" style="cursor: pointer;">
                         @if (columns != null)
                         {
                             @foreach (var column in columns)

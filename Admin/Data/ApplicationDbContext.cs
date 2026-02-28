@@ -16,6 +16,7 @@ namespace AdminPanel.Data;
     public DbSet<CartItem> CartItems => Set<CartItem>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -26,6 +27,7 @@ namespace AdminPanel.Data;
         ConfigureCartItem(builder);
         ConfigureOrder(builder);
         ConfigureOrderItem(builder);
+        ConfigureStockMovement(builder);
     }
 
     private void ConfigureCategory(ModelBuilder builder)
@@ -123,6 +125,33 @@ namespace AdminPanel.Data;
             e.HasOne(x => x.Product)
                 .WithMany(p => p.OrderItems)
                 .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private void ConfigureStockMovement(ModelBuilder builder)
+    {
+        builder.Entity<StockMovement>(e =>
+        {
+            e.Property(x => x.MovementType)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            e.Property(x => x.Reason)
+                .HasMaxLength(500);
+
+            e.HasIndex(x => x.ProductId);
+            e.HasIndex(x => x.UserId);
+            e.HasIndex(x => x.CreatedAt);
+
+            e.HasOne(x => x.Product)
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

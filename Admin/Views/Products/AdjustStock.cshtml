@@ -1,0 +1,160 @@
+@model StockAdjustmentViewModel
+@{
+    ViewData["Title"] = "Ajustar Stock";
+    var product = ViewBag.Product as Product;
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1>Ajustar Stock</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Productos</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.ProductId">@product?.Name</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Ajustar Stock</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="Details" asp-route-id="@Model.ProductId" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h3>@product?.Name</h3>
+                <p class="mb-0">
+                    <span class="badge bg-secondary">@product?.Category?.Name</span>
+                    <span class="ms-2">Stock Actual: 
+                        @{
+                            var stockClass = product?.Stock == 0 ? "danger" : (product?.Stock < 10 ? "warning" : "success");
+                        }
+                        <span class="badge bg-@stockClass">@product?.Stock unidades</span>
+                    </span>
+                </p>
+            </div>
+            <div class="card-body">
+                <form asp-action="AdjustStock" method="post">
+                    <input type="hidden" asp-for="ProductId" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="AdjustmentType" class="form-label"></label>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input asp-for="AdjustmentType" type="radio" value="@AdjustmentType.Add" 
+                                           class="form-check-input" id="adjustmentTypeAdd" checked />
+                                    <label class="form-check-label" for="adjustmentTypeAdd">
+                                        <i class="bi bi-plus-circle text-success"></i>
+                                        <strong>Agregar</strong><br>
+                                        <small class="text-muted">Entrada de mercancía</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input asp-for="AdjustmentType" type="radio" value="@AdjustmentType.Subtract" 
+                                           class="form-check-input" id="adjustmentTypeSubtract" />
+                                    <label class="form-check-label" for="adjustmentTypeSubtract">
+                                        <i class="bi bi-dash-circle text-danger"></i>
+                                        <strong>Restar</strong><br>
+                                        <small class="text-muted">Salida de mercancía</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input asp-for="AdjustmentType" type="radio" value="@AdjustmentType.Set" 
+                                           class="form-check-input" id="adjustmentTypeSet" />
+                                    <label class="form-check-label" for="adjustmentTypeSet">
+                                        <i class="bi bi-arrow-repeat text-primary"></i>
+                                        <strong>Establecer</strong><br>
+                                        <small class="text-muted">Cantidad exacta</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <span asp-validation-for="AdjustmentType" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Quantity" class="form-label"></label>
+                        <input asp-for="Quantity" class="form-control form-control-lg" id="quantity" />
+                        <span asp-validation-for="Quantity" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Reason" class="form-label"></label>
+                        <textarea asp-for="Reason" class="form-control" rows="3" 
+                                  placeholder="Opcional: Describa el motivo del ajuste..."></textarea>
+                        <span asp-validation-for="Reason" class="text-danger"></span>
+                    </div>
+
+                    <div class="alert alert-info" id="preview">
+                        <strong>Vista Previa:</strong><br>
+                        Stock Actual: <span id="currentStock">@product?.Stock</span> unidades<br>
+                        <strong>Nuevo Stock: <span id="newStock">@product?.Stock</span> unidades</strong>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save"></i> Confirmar Ajuste
+                        </button>
+                        <a asp-action="Details" asp-route-id="@Model.ProductId" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const currentStockValue = @product?.Stock;
+
+        function updatePreview() {
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const type = document.querySelector('input[name="AdjustmentType"]:checked')?.value;
+            
+            let newStock = currentStockValue;
+            
+            if (type === '@AdjustmentType.Add.ToString()') {
+                newStock = currentStockValue + quantity;
+            } else if (type === '@AdjustmentType.Subtract.ToString()') {
+                newStock = Math.max(0, currentStockValue - quantity);
+            } else if (type === '@AdjustmentType.Set.ToString()') {
+                newStock = quantity;
+            }
+            
+            document.getElementById('newStock').textContent = newStock;
+            
+            const preview = document.getElementById('preview');
+            preview.className = 'alert';
+            if (newStock === 0) {
+                preview.classList.add('alert-danger');
+            } else if (newStock < 10) {
+                preview.classList.add('alert-warning');
+            } else {
+                preview.classList.add('alert-success');
+            }
+        }
+
+        document.getElementById('quantity').addEventListener('input', updatePreview);
+        document.querySelectorAll('input[name="AdjustmentType"]').forEach(input => {
+            input.addEventListener('change', updatePreview);
+        });
+
+        updatePreview();
+    </script>
+}

@@ -1,10 +1,15 @@
 using AdminPanel.Data;
 using AdminPanel.Models;
+using AdminPanel.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add MVC with Views support
+builder.Services.AddControllersWithViews();
+
+// Keep Razor Pages for Account/Auth pages
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/");
@@ -12,8 +17,18 @@ builder.Services.AddRazorPages(options =>
     options.Conventions.AllowAnonymousToPage("/Account/AccessDenied");
 });
 
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "RequestVerificationToken";
+});
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IStockMovementService, StockMovementService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -65,6 +80,13 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map MVC controller routes
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
+// Map Razor Pages (for Account/Auth)
 app.MapRazorPages();
 
 app.Run();

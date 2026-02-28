@@ -1,0 +1,128 @@
+@model ProductCreateViewModel
+@{
+    ViewData["Title"] = "Crear Producto";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1>Crear Producto</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Index">Productos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Crear</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Cancelar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Price" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Price" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Stock" class="form-label"></label>
+                            <input asp-for="Stock" class="form-control" />
+                            <span asp-validation-for="Stock" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="CategoryId" class="form-label"></label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="@ViewBag.Categories">
+                                <option value="">-- Seleccione --</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label asp-for="ImageFile" class="form-label"></label>
+                        <input asp-for="ImageFile" class="form-control" accept="image/*" id="imageFile" />
+                        <span asp-validation-for="ImageFile" class="text-danger"></span>
+                        <small class="form-text text-muted">JPG, PNG, GIF</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <img id="imagePreview" src="#" alt="Vista previa" 
+                             class="img-fluid rounded border d-none" 
+                             style="max-height: 200px; width: 100%; object-fit: cover;" />
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label"></label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Los productos inactivos no serán visibles para los clientes
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Guardar
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.classList.add('d-none');
+            }
+        });
+    </script>
+}
