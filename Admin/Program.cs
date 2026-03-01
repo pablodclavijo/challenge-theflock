@@ -29,6 +29,7 @@ builder.Services.AddScoped<IStockMovementService, StockMovementService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {

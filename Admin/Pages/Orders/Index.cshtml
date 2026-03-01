@@ -29,6 +29,7 @@
         <form method="get" class="mb-4">
             <div class="row g-3">
                 <div class="col-md-4">
+                    <label class="form-label">Estado</label>
                     <select name="statusFilter" class="form-select" onchange="this.form.submit()">
                         <option value="">Todos los estados</option>
                         <option value="@OrderStatus.Pending" selected="@(Model.CurrentStatusFilter == OrderStatus.Pending.ToString())">Pendiente</option>
@@ -37,11 +38,21 @@
                         <option value="@OrderStatus.Delivered" selected="@(Model.CurrentStatusFilter == OrderStatus.Delivered.ToString())">Entregado</option>
                     </select>
                 </div>
-                @if (!string.IsNullOrEmpty(Model.CurrentStatusFilter))
+                <div class="col-md-4">
+                    <label class="form-label">Desde</label>
+                    <input type="date" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" 
+                           class="form-control" onchange="this.form.submit()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" 
+                           class="form-control" onchange="this.form.submit()">
+                </div>
+                @if (!string.IsNullOrEmpty(Model.CurrentStatusFilter) || Model.DateFrom.HasValue || Model.DateTo.HasValue)
                 {
-                    <div class="col-auto">
+                    <div class="col-auto d-flex align-items-end">
                         <a asp-page="./Index" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle"></i> Limpiar
+                            <i class="bi bi-x-circle"></i> Limpiar filtros
                         </a>
                     </div>
                 }
@@ -86,12 +97,10 @@
                 
                 ("Acciones", (dynamic o) => $@"
                     <div class='btn-group btn-group-sm' role='group'>
-                        <a href='/Orders/Details?id={o.Id}' class='btn btn-outline-primary' title='Ver'>
+                        <button type='button' class='btn btn-outline-primary' title='Ver Detalles' 
+                                onclick='showOrderDetails({o.Id})'>
                             <i class='bi bi-eye'></i>
-                        </a>
-                        <a href='/Orders/Edit?id={o.Id}' class='btn btn-outline-secondary' title='Editar'>
-                            <i class='bi bi-pencil'></i>
-                        </a>
+                        </button>
                     </div>", 
                     "text-end")
             };
@@ -99,7 +108,9 @@
             ViewData["BaseUrl"] = "/Orders/Index";
             ViewData["CurrentQuery"] = new Dictionary<string, string>
             {
-                ["statusFilter"] = Model.CurrentStatusFilter
+                ["statusFilter"] = Model.CurrentStatusFilter,
+                ["dateFrom"] = Model.DateFrom?.ToString("yyyy-MM-dd") ?? "",
+                ["dateTo"] = Model.DateTo?.ToString("yyyy-MM-dd") ?? ""
             };
         }
 
@@ -108,7 +119,7 @@
 </div>
 
 <!-- Stats Cards -->
-<div class="row g-3">
+<div class="row g-3 mt-3">
     <div class="col-6 col-md-3">
         <div class="admin-card">
             <div class="admin-card-body text-center">
@@ -150,3 +161,84 @@
         </div>
     </div>
 </div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailsModalLabel">Detalles del Pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showOrderDetails(orderId) {
+            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+            const content = document.getElementById('orderDetailsContent');
+            
+            content.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            `;
+            
+            modal.show();
+            
+            fetch(`/Orders/Details?id=${orderId}&handler=OrderDetails`)
+                .then(response => response.text())
+                .then(html => {
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    content.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Error al cargar los detalles del pedido.
+                        </div>
+                    `;
+                    console.error('Error:', error);
+                });
+        }
+
+        function changeOrderStatus(orderId, newStatus) {
+            if (!confirm('¿Está seguro de que desea cambiar el estado del pedido?')) {
+                return;
+            }
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            fetch(`/Orders/ChangeStatus?handler=ChangeStatus`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ orderId, newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'No se pudo cambiar el estado'));
+                }
+            })
+            .catch(error => {
+                alert('Error al cambiar el estado del pedido');
+                console.error('Error:', error);
+            });
+        }
+    </script>
+}

@@ -1,0 +1,215 @@
+@page
+@using AdminPanel.Enums
+@model AdminPanel.Pages.Orders.DetailsModel
+@{
+    ViewData["Title"] = $"Pedido #{Model.Order.Id}";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1>Pedido #@Model.Order.Id</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-page="./Index">Pedidos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Pedido #@Model.Order.Id</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a asp-page="./Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row g-3">
+    <!-- Order Info -->
+    <div class="col-lg-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2>Información del Pedido</h2>
+            </div>
+            <div class="admin-card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Estado:</strong></p>
+                        @{
+                            var statusBadge = Model.Order.Status switch
+                            {
+                                OrderStatus.Pending => "warning",
+                                OrderStatus.Confirmed => "info",
+                                OrderStatus.Shipped => "primary",
+                                OrderStatus.Delivered => "success",
+                                _ => "secondary"
+                            };
+                            var statusText = Model.Order.Status switch
+                            {
+                                OrderStatus.Pending => "Pendiente",
+                                OrderStatus.Confirmed => "Confirmado",
+                                OrderStatus.Shipped => "Enviado",
+                                OrderStatus.Delivered => "Entregado",
+                                _ => Model.Order.Status.ToString()
+                            };
+                        }
+                        <span class="badge bg-@statusBadge fs-6">@statusText</span>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Fecha de creación:</strong> @Model.Order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p><strong>Última actualización:</strong> @Model.Order.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                </div>
+
+                <hr />
+
+                <h4 class="mb-3">Productos</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Order.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@item.ProductNameSnapshot</strong>
+                                        @if (item.Product != null)
+                                        {
+                                            <br />
+                                            <small class="text-muted">
+                                                Stock actual: <span class="badge bg-@(item.Product.Stock > 0 ? "success" : "danger")">@item.Product.Stock</span>
+                                            </small>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">@item.Quantity</span>
+                                    </td>
+                                    <td class="text-end">$@item.UnitPriceSnapshot.ToString("N2")</td>
+                                    <td class="text-end"><strong>$@item.LineTotal.ToString("N2")</strong></td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                <td class="text-end"><strong>$@Model.Order.Subtotal.ToString("N2")</strong></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Impuestos:</strong></td>
+                                <td class="text-end"><strong>$@Model.Order.Tax.ToString("N2")</strong></td>
+                            </tr>
+                            <tr class="table-active">
+                                <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                                <td class="text-end"><strong class="fs-5">$@Model.Order.Total.ToString("N2")</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer & Status Actions -->
+    <div class="col-lg-4">
+        <!-- Customer Info -->
+        <div class="admin-card mb-3">
+            <div class="admin-card-header">
+                <h2>Datos del Comprador</h2>
+            </div>
+            <div class="admin-card-body">
+                <p><strong>Nombre:</strong><br />@Model.Order.User.FullName</p>
+                <p><strong>Email:</strong><br />@Model.Order.User.Email</p>
+                <p><strong>Dirección de envío:</strong><br />@Model.Order.ShippingAddress</p>
+            </div>
+        </div>
+
+        <!-- Status Change -->
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2>Cambiar Estado</h2>
+            </div>
+            <div class="admin-card-body">
+                @{
+                    var canConfirm = Model.Order.Status == OrderStatus.Pending;
+                    var canShip = Model.Order.Status == OrderStatus.Confirmed;
+                    var canDeliver = Model.Order.Status == OrderStatus.Shipped;
+                }
+
+                @if (canConfirm)
+                {
+                    <form method="post" asp-page-handler="ChangeStatus" class="mb-2">
+                        <input type="hidden" name="orderId" value="@Model.Order.Id" />
+                        <input type="hidden" name="newStatus" value="@((int)OrderStatus.Confirmed)" />
+                        <button type="submit" class="btn btn-info w-100">
+                            <i class="bi bi-check-circle"></i> Confirmar Pedido
+                        </button>
+                        <small class="text-muted d-block mt-1">Se descontará el stock automáticamente</small>
+                    </form>
+                }
+
+                @if (canShip)
+                {
+                    <form method="post" asp-page-handler="ChangeStatus" class="mb-2">
+                        <input type="hidden" name="orderId" value="@Model.Order.Id" />
+                        <input type="hidden" name="newStatus" value="@((int)OrderStatus.Shipped)" />
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-box-seam"></i> Marcar como Enviado
+                        </button>
+                    </form>
+                }
+
+                @if (canDeliver)
+                {
+                    <form method="post" asp-page-handler="ChangeStatus" class="mb-2">
+                        <input type="hidden" name="orderId" value="@Model.Order.Id" />
+                        <input type="hidden" name="newStatus" value="@((int)OrderStatus.Delivered)" />
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-truck"></i> Marcar como Entregado
+                        </button>
+                    </form>
+                }
+
+                @if (!canConfirm && !canShip && !canDeliver)
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> El pedido ya está en su estado final.
+                    </div>
+                }
+
+                <hr />
+
+                <div class="small text-muted">
+                    <p class="mb-1"><strong>Flujo de estados:</strong></p>
+                    <p class="mb-0">
+                        Pendiente ? Confirmado ? Enviado ? Entregado
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,148 @@
+@using AdminPanel.Enums
+@model AdminPanel.Models.Order
+
+@{
+    var statusBadge = Model.Status switch
+    {
+        OrderStatus.Pending => "warning",
+        OrderStatus.Confirmed => "info",
+        OrderStatus.Shipped => "primary",
+        OrderStatus.Delivered => "success",
+        _ => "secondary"
+    };
+    var statusText = Model.Status switch
+    {
+        OrderStatus.Pending => "Pendiente",
+        OrderStatus.Confirmed => "Confirmado",
+        OrderStatus.Shipped => "Enviado",
+        OrderStatus.Delivered => "Entregado",
+        _ => Model.Status.ToString()
+    };
+}
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <p class="mb-1"><strong>Pedido:</strong> #@Model.Id</p>
+        <p class="mb-1"><strong>Estado:</strong> <span class="badge bg-@statusBadge">@statusText</span></p>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <p class="mb-1"><small class="text-muted">Creado: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small></p>
+        <p class="mb-1"><small class="text-muted">Actualizado: @Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</small></p>
+    </div>
+</div>
+
+<hr />
+
+<h5 class="mb-3">Datos del Cliente</h5>
+<div class="row mb-3">
+    <div class="col-md-6">
+        <p class="mb-1"><strong>Nombre:</strong> @Model.User.FullName</p>
+        <p class="mb-1"><strong>Email:</strong> @Model.User.Email</p>
+    </div>
+    <div class="col-md-6">
+        <p class="mb-1"><strong>Dirección de envío:</strong></p>
+        <p class="mb-1">@Model.ShippingAddress</p>
+    </div>
+</div>
+
+<hr />
+
+<h5 class="mb-3">Productos</h5>
+<div class="table-responsive">
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-end">Precio Unit.</th>
+                <th class="text-end">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>
+                        <strong>@item.ProductNameSnapshot</strong>
+                        @if (item.Product != null)
+                        {
+                            <br />
+                            <small class="text-muted">Stock: <span class="badge bg-@(item.Product.Stock > 0 ? "success" : "danger")">@item.Product.Stock</span></small>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary">@item.Quantity</span>
+                    </td>
+                    <td class="text-end">$@item.UnitPriceSnapshot.ToString("N2")</td>
+                    <td class="text-end"><strong>$@item.LineTotal.ToString("N2")</strong></td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                <td class="text-end"><strong>$@Model.Subtotal.ToString("N2")</strong></td>
+            </tr>
+            <tr>
+                <td colspan="3" class="text-end"><strong>Impuestos:</strong></td>
+                <td class="text-end"><strong>$@Model.Tax.ToString("N2")</strong></td>
+            </tr>
+            <tr class="table-active">
+                <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                <td class="text-end"><strong class="fs-5">$@Model.Total.ToString("N2")</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<hr />
+
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        @{
+            var canConfirm = Model.Status == OrderStatus.Pending;
+            var canShip = Model.Status == OrderStatus.Confirmed;
+            var canDeliver = Model.Status == OrderStatus.Shipped;
+        }
+
+        @if (canConfirm || canShip || canDeliver)
+        {
+            <p class="mb-2"><strong>Cambiar estado:</strong></p>
+            <div class="btn-group btn-group-sm">
+                @if (canConfirm)
+                {
+                    <button type="button" class="btn btn-info" onclick="changeOrderStatus(@Model.Id, @((int)OrderStatus.Confirmed))">
+                        <i class="bi bi-check-circle"></i> Confirmar
+                    </button>
+                }
+                @if (canShip)
+                {
+                    <button type="button" class="btn btn-primary" onclick="changeOrderStatus(@Model.Id, @((int)OrderStatus.Shipped))">
+                        <i class="bi bi-box-seam"></i> Enviar
+                    </button>
+                }
+                @if (canDeliver)
+                {
+                    <button type="button" class="btn btn-success" onclick="changeOrderStatus(@Model.Id, @((int)OrderStatus.Delivered))">
+                        <i class="bi bi-truck"></i> Entregar
+                    </button>
+                }
+            </div>
+            @if (canConfirm)
+            {
+                <p class="text-muted small mt-2 mb-0">* Al confirmar se descontará el stock automáticamente</p>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle"></i> El pedido ya está en su estado final.
+            </div>
+        }
+    </div>
+    <div>
+        <a href="/Orders/Details?id=@Model.Id" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-box-arrow-up-right"></i> Ver detalle completo
+        </a>
+    </div>
+</div>

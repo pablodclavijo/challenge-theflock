@@ -19,10 +19,14 @@ namespace AdminPanel.Pages.Orders
 
         public PaginatedList<Order> Orders { get; set; } = default!;
         public string CurrentStatusFilter { get; set; } = string.Empty;
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
 
-        public async Task OnGetAsync(string? statusFilter, int? pageIndex)
+        public async Task OnGetAsync(string? statusFilter, DateTime? dateFrom, DateTime? dateTo, int? pageIndex)
         {
             CurrentStatusFilter = statusFilter ?? string.Empty;
+            DateFrom = dateFrom;
+            DateTo = dateTo;
 
             IQueryable<Order> ordersQuery = _context.Orders
                 .Include(o => o.User)
@@ -33,6 +37,18 @@ namespace AdminPanel.Pages.Orders
             if (!string.IsNullOrEmpty(statusFilter) && Enum.TryParse<Enums.OrderStatus>(statusFilter, out var status))
             {
                 ordersQuery = ordersQuery.Where(o => o.Status == status);
+            }
+
+            // Filtro por rango de fechas
+            if (dateFrom.HasValue)
+            {
+                ordersQuery = ordersQuery.Where(o => o.CreatedAt >= dateFrom.Value);
+            }
+
+            if (dateTo.HasValue)
+            {
+                var dateToEnd = dateTo.Value.AddDays(1);
+                ordersQuery = ordersQuery.Where(o => o.CreatedAt < dateToEnd);
             }
 
             ordersQuery = ordersQuery.OrderByDescending(o => o.CreatedAt);
