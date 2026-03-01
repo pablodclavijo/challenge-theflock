@@ -1,0 +1,10 @@
+global using Xunit;
+global using Moq;
+global using AdminPanel.Models;
+global using AdminPanel.Services;
+global using AdminPanel.Pages.Products;
+global using AdminPanel.Data;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Mvc.RazorPages;
+global using Microsoft.AspNetCore.Mvc.ViewFeatures;
+global using AdminPanel.Tests.Helpers;

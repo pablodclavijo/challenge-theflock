@@ -1,0 +1,768 @@
+@page
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
+@model AdminPanel.Pages.Products.IndexModel
+@{
+    ViewData["Title"] = "Productos";
+    Layout = "_AdminLayout";
+    var tokens = Antiforgery.GetAndStoreTokens(HttpContext);
+}
+
+@* Anti-forgery token for AJAX requests *@
+<input type="hidden" name="__RequestVerificationToken" value="@tokens.RequestToken" />
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1>Productos</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Productos</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal" onclick="openCreateModal()">
+                <i class="bi bi-plus-circle"></i> Nuevo Producto
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2>Listado de Productos</h2>
+    </div>
+    <div class="admin-card-body">
+        <!-- Filtros y búsqueda -->
+        <form method="get" class="mb-4">
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-3">
+                    <div class="input-group">
+                        <input type="text" 
+                               name="searchString" 
+                               value="@Model.CurrentFilter" 
+                               class="form-control" 
+                               placeholder="Buscar por nombre o descripción...">
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <select name="categoryId" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todas las categorías</option>
+                        @foreach (var category in Model.Categories)
+                        {
+                            <option value="@category.Value" selected="@(Model.CurrentCategory?.ToString() == category.Value)">
+                                @category.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <select name="isActive" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todos los estados</option>
+                        <option value="true" selected="@(Model.CurrentStatus == true)">Activos</option>
+                        <option value="false" selected="@(Model.CurrentStatus == false)">Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <select name="sortOrder" class="form-select" onchange="this.form.submit()">
+                        <option value="">Ordenar por: Nombre (A-Z)</option>
+                        <option value="name_desc" selected="@(Model.CurrentSort == "name_desc")">Nombre (Z-A)</option>
+                        <option value="price" selected="@(Model.CurrentSort == "price")">Precio (Menor a Mayor)</option>
+                        <option value="price_desc" selected="@(Model.CurrentSort == "price_desc")">Precio (Mayor a Menor)</option>
+                        <option value="stock" selected="@(Model.CurrentSort == "stock")">Stock (Menor a Mayor)</option>
+                        <option value="stock_desc" selected="@(Model.CurrentSort == "stock_desc")">Stock (Mayor a Menor)</option>
+                    </select>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.CurrentFilter) || !string.IsNullOrEmpty(Model.CurrentSort) || Model.CurrentCategory.HasValue || Model.CurrentStatus.HasValue)
+                {
+                    <div class="col-auto">
+                        <a asp-page="./Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </a>
+                    </div>
+                }
+            </div>
+        </form>
+
+        <!-- Tabla de datos -->
+        @{
+            ViewData["Columns"] = new List<(string Header, Func<dynamic, object> Cell, string CssClass)>
+            {
+                ("Imagen", (dynamic p) => string.IsNullOrEmpty(p.ImageUrl) 
+                    ? "<div class='bg-secondary text-white d-flex align-items-center justify-content-center' style='width: 50px; height: 50px; border-radius: 4px;'><i class='bi bi-image'></i></div>"
+                    : $"<img src='{p.ImageUrl}' alt='{p.Name}' style='width: 50px; height: 50px; object-fit: cover; border-radius: 4px;'>", 
+                    ""),
+                
+                ("Nombre", (dynamic p) => $"<div><strong>{p.Name}</strong><br><small class='text-muted'>{(p.Description.Length > 50 ? p.Description.Substring(0, 50) + "..." : p.Description)}</small></div>", ""),
+                
+                ("Categoría", (dynamic p) => $"<span class='badge bg-secondary'>{p.Category?.Name ?? "Sin categoría"}</span>", ""),
+                
+                ("Precio", (dynamic p) => $"<strong>${p.Price:N2}</strong>", "text-end"),
+                
+                ("Stock", (dynamic p) => {
+                    var stockClass = p.Stock == 0 ? "danger" : (p.Stock < 10 ? "warning" : "success");
+                    return $"<span class='badge bg-{stockClass}'>{p.Stock}</span>";
+                }, "text-center"),
+                
+                ("Estado", (dynamic p) => p.IsActive 
+                    ? "<span class='badge bg-success'><i class='bi bi-check-circle'></i> Activo</span>"
+                    : "<span class='badge bg-danger'><i class='bi bi-x-circle'></i> Inactivo</span>", 
+                    "text-center"),
+                
+                ("Acciones", (dynamic p) => {
+                    var btnClass = p.IsActive ? "warning" : "success";
+                    var btnIcon = p.IsActive ? "x-circle" : "check-circle";
+                    var btnTitle = p.IsActive ? "Desactivar" : "Activar";
+                    return $@"
+                    <div class='btn-group btn-group-sm' role='group'>
+                        <button type='button' class='btn btn-outline-primary' title='Ver' onclick='event.stopPropagation(); openDetailsModal({p.Id})'>
+                            <i class='bi bi-eye'></i>
+                        </button>
+                        <button type='button' class='btn btn-outline-secondary' title='Editar' onclick='event.stopPropagation(); openEditModal({p.Id})'>
+                            <i class='bi bi-pencil'></i>
+                        </button>
+                        <button type='button' class='btn btn-outline-info' title='Ajustar Stock' onclick='event.stopPropagation(); openAdjustStockModal({p.Id}, ""{p.Name}"", {p.Stock})'>
+                            <i class='bi bi-box-seam'></i>
+                        </button>
+                        <button type='button' class='btn btn-outline-{btnClass}' title='{btnTitle}' 
+                                onclick='event.stopPropagation(); openConfirmStatusModal({p.Id}, ""{p.Name}"", {p.IsActive.ToString().ToLower()})'>
+                            <i class='bi bi-{btnIcon}'></i>
+                        </button>
+                    </div>";
+                }, "text-end")
+            };
+
+            ViewData["BaseUrl"] = "/Products/Index";
+            ViewData["CurrentQuery"] = new Dictionary<string, string>
+            {
+                ["searchString"] = Model.CurrentFilter,
+                ["sortOrder"] = Model.CurrentSort,
+                ["categoryId"] = Model.CurrentCategory?.ToString() ?? "",
+                ["isActive"] = Model.CurrentStatus?.ToString() ?? ""
+            };
+        }
+
+        <partial name="_DataTable" model="Model.Products" />
+    </div>
+</div>
+
+<!-- Modal para Crear/Editar Producto -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Nuevo Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="productForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" id="productId" name="Input.Id" />
+                    
+                    <div class="alert alert-danger d-none" id="formErrors" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="productName" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="productName" name="Input.Name" 
+                                       placeholder="Ej: Laptop HP Pavilion" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="productDescription" class="form-label">Descripción <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="productDescription" name="Input.Description" 
+                                          rows="4" placeholder="Descripción detallada del producto..." required></textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="productPrice" class="form-label">Precio <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="productPrice" name="Input.Price" 
+                                               step="0.01" min="0.01" max="999999.99" placeholder="0.00" required />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="productStock" class="form-label">Stock <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="productStock" name="Input.Stock" 
+                                           min="0" placeholder="0" value="0" required />
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="productCategory" class="form-label">Categoría <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="productCategory" name="Input.CategoryId" required>
+                                        <option value="">-- Seleccione --</option>
+                                        @foreach (var category in Model.Categories)
+                                        {
+                                            <option value="@category.Value">@category.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="productImage" class="form-label">Imagen</label>
+                                <input type="file" class="form-control" id="productImage" name="Input.ImageFile" 
+                                       accept="image/*" />
+                                <small class="form-text text-muted">JPG, PNG, GIF</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <div id="currentImageContainer" class="d-none mb-2">
+                                    <label class="form-label">Imagen Actual</label>
+                                    <img id="currentImage" src="" alt="Imagen actual" 
+                                         class="img-fluid rounded border d-block mb-2" 
+                                         style="max-height: 150px; width: 100%; object-fit: cover;" />
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="removeImage" name="Input.RemoveImage" />
+                                        <label class="form-check-label" for="removeImage">Eliminar imagen actual</label>
+                                    </div>
+                                </div>
+
+                                <img id="imagePreview" src="#" alt="Vista previa" 
+                                     class="img-fluid rounded border d-none" 
+                                     style="max-height: 200px; width: 100%; object-fit: cover;" />
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" id="productIsActive" 
+                                           name="Input.IsActive" value="true" checked />
+                                    <label class="form-check-label" for="productIsActive">Activo</label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Los productos inactivos no serán visibles para los clientes
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="saveProductBtn">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalles del Producto -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Detalles del Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="detailsModalContent">
+                <div class="modal-body text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación para Cambiar Estado -->
+<div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-labelledby="confirmStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmStatusModalLabel">Confirmar Cambio de Estado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <p class="text-center mb-0" id="confirmStatusMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-warning" id="confirmStatusBtn">
+                    <i class="bi bi-check-circle"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Ajuste de Stock -->
+<div class="modal fade" id="adjustStockModal" tabindex="-1" aria-labelledby="adjustStockModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="adjustStockModalLabel">
+                    <i class="bi bi-box-seam"></i> Ajustar Stock
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="adjustStockForm">
+                <div class="modal-body">
+                    <input type="hidden" id="adjustProductId" name="StockAdjustment.ProductId" />
+                    
+                    <div class="alert alert-danger d-none" id="adjustStockErrors" role="alert"></div>
+
+                    <div class="mb-3">
+                        <strong>Producto:</strong>
+                        <div id="adjustProductName" class="text-muted fs-6"></div>
+                    </div>
+
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Stock Actual:</strong> 
+                        <span class="badge bg-primary fs-6" id="currentStockBadge">0 unidades</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Tipo de Ajuste <span class="text-danger">*</span></label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="StockAdjustment.AdjustmentType" 
+                                   id="adjustTypeAdd" value="Add" checked required />
+                            <label class="btn btn-outline-success" for="adjustTypeAdd">
+                                <i class="bi bi-plus-circle"></i> Agregar
+                            </label>
+
+                            <input type="radio" class="btn-check" name="StockAdjustment.AdjustmentType" 
+                                   id="adjustTypeSubtract" value="Subtract" />
+                            <label class="btn btn-outline-danger" for="adjustTypeSubtract">
+                                <i class="bi bi-dash-circle"></i> Restar
+                            </label>
+
+                            <input type="radio" class="btn-check" name="StockAdjustment.AdjustmentType" 
+                                   id="adjustTypeSet" value="Set" />
+                            <label class="btn btn-outline-primary" for="adjustTypeSet">
+                                <i class="bi bi-arrow-repeat"></i> Establecer
+                            </label>
+                        </div>
+                        <small class="form-text text-muted d-block mt-2">
+                            <strong>Agregar:</strong> Suma cantidad. <strong>Restar:</strong> Resta cantidad. <strong>Establecer:</strong> Define stock exacto.
+                        </small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="adjustQuantity" class="form-label">Cantidad <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control form-control-lg" id="adjustQuantity" 
+                               name="StockAdjustment.Quantity" 
+                               min="1" value="1" required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="adjustReason" class="form-label">Motivo del Ajuste <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="adjustReason" name="StockAdjustment.Reason" 
+                                  rows="3" 
+                                  minlength="3" maxlength="500"
+                                  placeholder="Ej: Recepción de mercancía, Inventario físico, Devolución de cliente, etc." 
+                                  required></textarea>
+                        <small class="form-text text-muted">
+                            <i class="bi bi-exclamation-circle"></i> Requerido: Explique el motivo del ajuste (mínimo 3 caracteres)
+                        </small>
+                    </div>
+
+                    <div id="stockPreview" class="alert alert-secondary">
+                        <strong>Nuevo Stock:</strong> 
+                        <span id="newStockValue" class="fs-5">0</span> unidades
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="saveAdjustmentBtn">
+                        <i class="bi bi-save"></i> Confirmar Ajuste
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        // Global state object for stock adjustment - ensures data integrity
+        const stockAdjustmentState = {
+            productId: null,
+            productName: null,
+            currentStock: 0
+        };
+
+        let currentProductId = null;
+        let statusToggleProductId = null;
+
+        async function openDetailsModal(productId) {
+            try {
+                const response = await fetch('/Products/Details?id=' + productId);
+
+                if (!response.ok) {
+                    throw new Error('Producto no encontrado');
+                }
+
+                const html = await response.text();
+                document.getElementById('detailsModalContent').innerHTML = html;
+
+                const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error loading product details:', error);
+                alert('Error al cargar los detalles del producto: ' + error.message);
+            }
+        }
+
+        function openCreateModal() {
+            currentProductId = null;
+            document.getElementById('productModalLabel').textContent = 'Nuevo Producto';
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('productStock').value = '0';
+            document.getElementById('productIsActive').checked = true;
+            document.getElementById('currentImageContainer').classList.add('d-none');
+            document.getElementById('imagePreview').classList.add('d-none');
+            document.getElementById('formErrors')?.classList.add('d-none');
+        }
+
+        async function openEditModal(productId) {
+            currentProductId = productId;
+            document.getElementById('productModalLabel').textContent = 'Editar Producto';
+            document.getElementById('formErrors')?.classList.add('d-none');
+            
+            try {
+                const response = await fetch('/Products/Index?handler=ProductData&id=' + productId);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('productId').value = data.id;
+                    document.getElementById('productName').value = data.name;
+                    document.getElementById('productDescription').value = data.description;
+                    document.getElementById('productPrice').value = data.price;
+                    document.getElementById('productStock').value = data.stock;
+                    document.getElementById('productCategory').value = data.categoryId;
+                    document.getElementById('productIsActive').checked = data.isActive;
+                    
+                    if (data.imageUrl) {
+                        document.getElementById('currentImage').src = data.imageUrl;
+                        document.getElementById('currentImageContainer').classList.remove('d-none');
+                    } else {
+                        document.getElementById('currentImageContainer').classList.add('d-none');
+                    }
+                    
+                    document.getElementById('imagePreview').classList.add('d-none');
+                    document.getElementById('removeImage').checked = false;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('productModal'));
+                    modal.show();
+                }
+            } catch (error) {
+                console.error('Error loading product:', error);
+                alert('Error al cargar el producto');
+            }
+        }
+
+        function openConfirmStatusModal(productId, productName, isActive) {
+            statusToggleProductId = productId;
+            const action = isActive ? 'desactivar' : 'activar';
+            const icon = isActive ? 'x-circle' : 'check-circle';
+            const btnClass = isActive ? 'warning' : 'success';
+            
+            document.getElementById('confirmStatusMessage').innerHTML = 
+                `¿Está seguro de que desea <strong>${action}</strong> el producto<br><strong>"${productName}"</strong>?`;
+            
+            const confirmBtn = document.getElementById('confirmStatusBtn');
+            confirmBtn.className = `btn btn-${btnClass}`;
+            confirmBtn.innerHTML = `<i class="bi bi-${icon}"></i> ${action.charAt(0).toUpperCase() + action.slice(1)}`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('confirmStatusModal'));
+            modal.show();
+        }
+
+        function openAdjustStockModal(productId, productName, currentStock) {
+            // Store values in state object to ensure data integrity
+            stockAdjustmentState.productId = productId;
+            stockAdjustmentState.productName = productName;
+            stockAdjustmentState.currentStock = currentStock;
+            
+            // Reset form and populate from state
+            document.getElementById('adjustStockForm').reset();
+            document.getElementById('adjustProductId').value = stockAdjustmentState.productId;
+            document.getElementById('adjustProductName').textContent = stockAdjustmentState.productName;
+            document.getElementById('currentStockBadge').textContent = stockAdjustmentState.currentStock + ' unidades';
+            document.getElementById('adjustQuantity').value = '1';
+            document.getElementById('adjustTypeAdd').checked = true;
+            document.getElementById('adjustStockErrors')?.classList.add('d-none');
+            
+            // Update preview
+            updateStockPreview();
+            
+            // Open modal
+            const modal = new bootstrap.Modal(document.getElementById('adjustStockModal'));
+            modal.show();
+        }
+
+        function updateStockPreview() {
+            const quantity = parseInt(document.getElementById('adjustQuantity').value) || 0;
+            const adjustmentType = document.querySelector('input[name="StockAdjustment.AdjustmentType"]:checked')?.value;
+            
+            let newStock = stockAdjustmentState.currentStock;
+            
+            if (adjustmentType === 'Add') {
+                newStock = stockAdjustmentState.currentStock + quantity;
+            } else if (adjustmentType === 'Subtract') {
+                newStock = Math.max(0, stockAdjustmentState.currentStock - quantity);
+            } else if (adjustmentType === 'Set') {
+                newStock = quantity;
+            }
+            
+            document.getElementById('newStockValue').textContent = newStock;
+            
+            const stockPreview = document.getElementById('stockPreview');
+            stockPreview.className = 'alert';
+            if (newStock === 0) {
+                stockPreview.classList.add('alert-danger');
+            } else if (newStock < 10) {
+                stockPreview.classList.add('alert-warning');
+            } else {
+                stockPreview.classList.add('alert-success');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Double-click row to open details
+            document.addEventListener('click', function(e) {
+                const row = e.target.closest('tr[data-product-id]');
+                if (row) {
+                    row.style.cursor = 'pointer';
+                }
+            });
+
+            document.addEventListener('dblclick', function(e) {
+                const row = e.target.closest('tr[data-product-id]');
+                if (row) {
+                    const productId = row.getAttribute('data-product-id');
+                    openDetailsModal(productId);
+                }
+            });
+
+            // Image preview
+            document.getElementById('productImage').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('imagePreview');
+                        preview.src = e.target.result;
+                        preview.classList.remove('d-none');
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    document.getElementById('imagePreview').classList.add('d-none');
+                }
+            });
+
+            // Confirm status change
+            document.getElementById('confirmStatusBtn').addEventListener('click', function() {
+                if (statusToggleProductId) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/Products/ToggleStatus?id=' + statusToggleProductId;
+                    
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                    if (token) {
+                        const tokenInput = document.createElement('input');
+                        tokenInput.type = 'hidden';
+                        tokenInput.name = '__RequestVerificationToken';
+                        tokenInput.value = token.value;
+                        form.appendChild(tokenInput);
+                    }
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+
+            // Maintain modal state when shown
+            document.getElementById('adjustStockModal')?.addEventListener('shown.bs.modal', function() {
+                if (stockAdjustmentState.productId) {
+                    document.getElementById('adjustProductId').value = stockAdjustmentState.productId;
+                    document.getElementById('adjustProductName').textContent = stockAdjustmentState.productName;
+                    document.getElementById('currentStockBadge').textContent = stockAdjustmentState.currentStock + ' unidades';
+                    updateStockPreview();
+                }
+            });
+
+            // Stock adjustment preview updates
+            const adjustQuantityInput = document.getElementById('adjustQuantity');
+            const adjustmentTypeInputs = document.querySelectorAll('input[name="StockAdjustment.AdjustmentType"]');
+            
+            adjustQuantityInput?.addEventListener('input', updateStockPreview);
+            adjustmentTypeInputs?.forEach(input => {
+                input.addEventListener('change', updateStockPreview);
+            });
+
+            // Stock adjustment form submission
+            document.getElementById('adjustStockForm')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!this.checkValidity()) {
+                    this.reportValidity();
+                    return;
+                }
+                
+                const reason = document.getElementById('adjustReason').value.trim();
+                if (reason.length < 3) {
+                    const adjustStockErrors = document.getElementById('adjustStockErrors');
+                    adjustStockErrors.textContent = 'El motivo debe tener al menos 3 caracteres';
+                    adjustStockErrors.classList.remove('d-none');
+                    return;
+                }
+                
+                // Get values from state object for data integrity
+                const productId = stockAdjustmentState.productId;
+                const adjustmentType = document.querySelector('input[name="StockAdjustment.AdjustmentType"]:checked')?.value;
+                const quantity = document.getElementById('adjustQuantity').value;
+                
+                const adjustStockErrors = document.getElementById('adjustStockErrors');
+                adjustStockErrors?.classList?.add('d-none');
+                
+                const saveBtn = document.getElementById('saveAdjustmentBtn');
+                const originalBtnText = saveBtn.innerHTML;
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Guardando...';
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('StockAdjustment.ProductId', productId);
+                    formData.append('StockAdjustment.AdjustmentType', adjustmentType);
+                    formData.append('StockAdjustment.Quantity', quantity);
+                    formData.append('StockAdjustment.Reason', reason);
+                    
+                    const response = await fetch('/Products/Index?handler=AdjustStock', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('adjustStockModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        
+                        window.location.href = '/Products/Index?successMessage=' + encodeURIComponent(result.message);
+                    } else {
+                        adjustStockErrors.textContent = result.message || 'Error al ajustar el stock';
+                        adjustStockErrors.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    adjustStockErrors.textContent = 'Error al ajustar el stock. Por favor, intente nuevamente.';
+                    adjustStockErrors.classList.remove('d-none');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalBtnText;
+                }
+            });
+
+            // Product form submission
+            document.getElementById('productForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!this.checkValidity()) {
+                    this.reportValidity();
+                    return;
+                }
+                
+                const formErrors = document.getElementById('formErrors');
+                formErrors?.classList?.add('d-none');
+                
+                const saveBtn = document.getElementById('saveProductBtn');
+                const originalBtnText = saveBtn.innerHTML;
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Guardando...';
+                
+                try {
+                    const formData = new FormData(this);
+                    
+                    if (!document.getElementById('productIsActive').checked) {
+                        formData.set('Input.IsActive', 'false');
+                    }
+                    
+                    const response = await fetch('/Products/Index?handler=Save', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Response error:', errorText);
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        
+                        window.location.href = '/Products/Index?successMessage=' + encodeURIComponent(result.message);
+                    } else {
+                        formErrors.innerHTML = '<ul class="mb-0">' + 
+                            (result.errors || ['Error desconocido']).map(e => '<li>' + e + '</li>').join('') + 
+                            '</ul>';
+                        formErrors.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    formErrors.innerHTML = 'Error al guardar el producto. Por favor, intente nuevamente.<br>Detalles: ' + error.message;
+                    formErrors.classList.remove('d-none');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalBtnText;
+                }
+            });
+
+            // Show success message from query string
+            const urlParams = new URLSearchParams(window.location.search);
+            const successMessage = urlParams.get('successMessage');
+            if (successMessage) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                alertDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + successMessage +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+                document.querySelector('.content-wrapper').insertBefore(alertDiv, document.querySelector('.page-header'));
+                
+                window.history.replaceState({}, '', '/Products/Index');
+            }
+        });
+    </script>
+}

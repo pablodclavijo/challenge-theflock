@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="AdminPanel.Tests\**" />
+    <Content Remove="AdminPanel.Tests\**" />
+    <EmbeddedResource Remove="AdminPanel.Tests\**" />
+    <None Remove="AdminPanel.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Views\Home\" />
   </ItemGroup>
 
