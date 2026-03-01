@@ -126,8 +126,11 @@
                         <button type='button' class='btn btn-outline-secondary' title='Editar' onclick='event.stopPropagation(); openEditModal({p.Id})'>
                             <i class='bi bi-pencil'></i>
                         </button>
+                        <button type='button' class='btn btn-outline-info' title='Ajustar Stock' onclick='event.stopPropagation(); openStockModal({p.Id}, &quot;{p.Name}&quot;, {p.Stock})'>
+                            <i class='bi bi-box-seam'></i>
+                        </button>
                         <button type='button' class='btn btn-outline-{btnClass}' title='{btnTitle}' 
-                                onclick='event.stopPropagation(); openConfirmStatusModal({p.Id}, ""{p.Name}"", {p.IsActive.ToString().ToLower()})'>
+                                onclick='event.stopPropagation(); openConfirmStatusModal({p.Id}, &quot;{p.Name}&quot;, {p.IsActive.ToString().ToLower()})'>
                             <i class='bi bi-{btnIcon}'></i>
                         </button>
                     </div>";
@@ -275,6 +278,58 @@
     </div>
 </div>
 
+<!-- Modal para Ajustar Stock -->
+<div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stockModalLabel">Ajustar Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="stockForm">
+                <div class="modal-body">
+                    <input type="hidden" id="stockProductId" name="ProductId" />
+                    <div class="mb-3">
+                        <label class="form-label">Producto</label>
+                        <input type="text" class="form-control" id="stockProductName" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label for="stockCurrent" class="form-label">Stock actual</label>
+                        <input type="number" class="form-control" id="stockCurrent" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label for="movementType" class="form-label">Tipo de movimiento <span class="text-danger">*</span></label>
+                        <select class="form-select" id="movementType" name="MovementType" required>
+                            @foreach (var type in Model.StockMovementTypes)
+                            {
+                                <option value="@type.Value">@type.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="stockAdjustment" class="form-label">Ajuste de stock <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="stockAdjustment" name="Adjustment" required min="1" placeholder="Ej: 5" />
+                        <div class="form-text">Ingrese un número positivo. El tipo de movimiento determinará si se suma, resta o reemplaza el stock.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Motivo</label>
+                        <textarea class="form-control" id="reason" name="Reason" rows="2" maxlength="200" placeholder="Motivo del ajuste..."></textarea>
+                    </div>
+                    <div class="alert alert-danger d-none" id="stockFormErrors" role="alert"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-info" id="saveStockBtn">
+                        <i class="bi bi-save"></i> Ajustar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Modal de Confirmación para Cambiar Estado -->
 <div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-labelledby="confirmStatusModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -305,7 +360,19 @@
 @section Scripts {
     <script>
         let currentProductId = null;
+        let stockProductId = null;
         let statusToggleProductId = null;
+
+        function openStockModal(productId, productName, currentStock) {
+            stockProductId = productId;
+            document.getElementById('stockProductId').value = productId;
+            document.getElementById('stockProductName').value = productName;
+            document.getElementById('stockCurrent').value = currentStock;
+            document.getElementById('stockAdjustment').value = '';
+            document.getElementById('stockFormErrors')?.classList.add('d-none');
+            const modal = new bootstrap.Modal(document.getElementById('stockModal'));
+            modal.show();
+        }
 
         async function openDetailsModal(productId) {
             try {
@@ -514,6 +581,83 @@
                     console.error('Error:', error);
                     formErrors.innerHTML = 'Error al guardar el producto. Por favor, intente nuevamente.<br>Detalles: ' + error.message;
                     formErrors.classList.remove('d-none');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalBtnText;
+                }
+            });
+
+            // Stock adjustment form submission
+            document.getElementById('stockForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formErrors = document.getElementById('stockFormErrors');
+                if (formErrors) formErrors.classList.add('d-none');
+                const adjustmentInput = document.getElementById('stockAdjustment');
+                adjustmentInput.classList.remove('is-invalid');
+                const currentStock = Number(document.getElementById('stockCurrent').value);
+                const adjustment = Number(adjustmentInput.value);
+                const movementType = document.getElementById('movementType').value;
+                let willBeNegative = false;
+                if (movementType === 'Subtract' && (currentStock - adjustment < 0)) {
+                    willBeNegative = true;
+                }
+                if (movementType === 'Set' && adjustment < 0) {
+                    willBeNegative = true;
+                }
+                if (willBeNegative) {
+                    if (formErrors) {
+                        formErrors.innerHTML = '<div class="alert alert-danger mb-2"><i class="bi bi-exclamation-triangle-fill"></i> El ajuste de egreso no puede ser mayor al stock actual.</div>';
+                        formErrors.classList.remove('d-none');
+                    }
+                    adjustmentInput.classList.add('is-invalid');
+                    adjustmentInput.focus();
+                    return;
+                }
+                const saveBtn = document.getElementById('saveStockBtn');
+                const originalBtnText = saveBtn.innerHTML;
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Ajustando...';
+                try {
+                    const productId = Number(document.getElementById('stockProductId').value);
+                    const reason = document.getElementById('reason').value;
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    const response = await fetch('/Products/Index?handler=AdjustStock', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify({ id: productId, adjustment: adjustment, movementType: movementType, reason: reason })
+                    });
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    const result = await response.json();
+                    if (result.success) {
+                        // Show success alert in modal
+                        let modalBody = document.querySelector('#stockModal .modal-body');
+                        let alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                        alertDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + result.message;
+                        modalBody.prepend(alertDiv);
+                        setTimeout(() => {
+                            alertDiv.classList.remove('show');
+                            alertDiv.classList.add('hide');
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('stockModal'));
+                            if (modal) modal.hide();
+                            window.location.href = '/Products/Index?successMessage=' + encodeURIComponent(result.message);
+                        }, 1500);
+                    } else {
+                        if (formErrors) {
+                            formErrors.innerHTML = '<ul class="mb-0">' + (result.errors || ['Error desconocido']).map(e => '<li>' + e + '</li>').join('') + '</ul>';
+                            formErrors.classList.remove('d-none');
+                        }
+                    }
+                } catch (error) {
+                    if (formErrors) {
+                        formErrors.innerHTML = 'Error al ajustar el stock. Por favor, intente nuevamente.<br>Detalles: ' + error.message;
+                        formErrors.classList.remove('d-none');
+                    }
                 } finally {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = originalBtnText;

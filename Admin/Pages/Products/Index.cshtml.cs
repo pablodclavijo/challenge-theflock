@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace AdminPanel.Pages.Products
 {
@@ -16,12 +17,14 @@ namespace AdminPanel.Pages.Products
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
         private readonly IWebHostEnvironment _environment;
+        private readonly IStockMovementService _stockMovementService;
 
-        public IndexModel(IProductService productService, ICategoryService categoryService, IWebHostEnvironment environment)
+        public IndexModel(IProductService productService, ICategoryService categoryService, IWebHostEnvironment environment, IStockMovementService stockMovementService)
         {
             _productService = productService;
             _categoryService = categoryService;
             _environment = environment;
+            _stockMovementService = stockMovementService;
         }
 
         public PaginatedList<Product> Products { get; set; } = default!;
@@ -30,6 +33,14 @@ namespace AdminPanel.Pages.Products
         public int? CurrentCategory { get; set; }
         public bool? CurrentStatus { get; set; }
         public List<SelectListItem> Categories { get; set; } = new();
+        public static readonly Dictionary<StockMovementType, string> StockMovementTypeDisplay = new()
+        {
+            { StockMovementType.Add, "Entrada" },
+            { StockMovementType.Subtract, "Salida" },
+            { StockMovementType.Set, "Ajuste" }
+        };
+
+        public List<SelectListItem> StockMovementTypes { get; set; } = new();
 
         [BindProperty]
         public InputModel Input { get; set; } = default!;
@@ -104,6 +115,11 @@ namespace AdminPanel.Pages.Products
             int pageSize = 10;
             Products = await PaginatedList<Product>.CreateAsync(
                 productsQuery, pageIndex ?? 1, pageSize);
+
+            StockMovementTypes = StockMovementTypeDisplay.Select(kvp => new SelectListItem {
+                Value = kvp.Key.ToString(),
+                Text = kvp.Value
+            }).ToList();
         }
 
         public async Task<IActionResult> OnPostSaveAsync()
@@ -218,6 +234,62 @@ namespace AdminPanel.Pages.Products
                     product.ImageUrl
                 }
             });
+        }
+
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> OnPostAdjustStockAsync()
+        {
+            using var reader = new StreamReader(Request.Body);
+            var body = await reader.ReadToEndAsync();
+            var data = JsonSerializer.Deserialize<AdjustStockDto>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (data == null || data.Id <= 0)
+            {
+                return new JsonResult(new { success = false, errors = new[] { "Datos inválidos" } });
+            }
+            var product = await _productService.GetProductByIdAsync(data.Id);
+            if (product == null)
+            {
+                return new JsonResult(new { success = false, errors = new[] { "Producto no encontrado" } });
+            }
+            if (!int.TryParse(data.Adjustment?.ToString(), out int adjustment) || adjustment <= 0)
+            {
+                return new JsonResult(new { success = false, errors = new[] { "El ajuste debe ser un número positivo" } });
+            }
+            var previousStock = product.Stock;
+            if (!Enum.TryParse<StockMovementType>(data.MovementType, true, out var movementType))
+            {
+                return new JsonResult(new { success = false, errors = new[] { "Tipo de movimiento inválido" } });
+            }
+            int newStock;
+            switch (movementType)
+            {
+                case StockMovementType.Add:
+                    newStock = previousStock + adjustment;
+                    break;
+                case StockMovementType.Subtract:
+                    newStock = previousStock - adjustment;
+                    if (newStock < 0)
+                        return new JsonResult(new { success = false, errors = new[] { "El stock no puede ser negativo" } });
+                    break;
+                case StockMovementType.Set:
+                    newStock = adjustment;
+                    break;
+                default:
+                    return new JsonResult(new { success = false, errors = new[] { "Tipo de movimiento inválido" } });
+            }
+            product.Stock = newStock;
+            await _productService.UpdateProductAsync(product);
+            var reason = data.Reason ?? string.Empty;
+            await _stockMovementService.CreateStockMovementAsync(product.Id, previousStock, newStock, adjustment, movementType.ToString(), reason, GetUserId());
+            return new JsonResult(new { success = true, message = $"Stock ajustado correctamente. Nuevo stock: {newStock}" });
+        }
+
+        private class AdjustStockDto
+        {
+            public int Id { get; set; }
+            public int? Adjustment { get; set; }
+            public string? MovementType { get; set; }
+            public string? Reason { get; set; }
         }
 
         private async Task LoadCategoriesAsync()
