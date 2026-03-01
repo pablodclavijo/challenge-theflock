@@ -120,14 +120,11 @@
                     var btnTitle = p.IsActive ? "Desactivar" : "Activar";
                     return $@"
                     <div class='btn-group btn-group-sm' role='group'>
-                        <a href='/Products/Details/{p.Id}' class='btn btn-outline-primary' title='Ver' onclick='event.stopPropagation();'>
+                        <button type='button' class='btn btn-outline-primary' title='Ver' onclick='event.stopPropagation(); openDetailsModal({p.Id})'>
                             <i class='bi bi-eye'></i>
-                        </a>
+                        </button>
                         <button type='button' class='btn btn-outline-secondary' title='Editar' onclick='event.stopPropagation(); openEditModal({p.Id})'>
                             <i class='bi bi-pencil'></i>
-                        </button>
-                        <button type='button' class='btn btn-outline-info' title='Ajustar Stock' onclick='event.stopPropagation(); openQuickStockModal({p.Id}, ""{p.Name}"", {p.Stock})'>
-                            <i class='bi bi-box-seam'></i>
                         </button>
                         <button type='button' class='btn btn-outline-{btnClass}' title='{btnTitle}' 
                                 onclick='event.stopPropagation(); openConfirmStatusModal({p.Id}, ""{p.Name}"", {p.IsActive.ToString().ToLower()})'>
@@ -259,6 +256,25 @@
     </div>
 </div>
 
+<!-- Modal de Detalles del Producto -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Detalles del Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="detailsModalContent">
+                <div class="modal-body text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal de Confirmación para Cambiar Estado -->
 <div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-labelledby="confirmStatusModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -285,78 +301,30 @@
     </div>
 </div>
 
-<!-- Modal de Ajuste Rápido de Stock -->
-<div class="modal fade" id="quickStockModal" tabindex="-1" aria-labelledby="quickStockModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="quickStockModalLabel">Ajuste Rápido de Stock</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="quickStockForm">
-                <div class="modal-body">
-                    <input type="hidden" id="stockProductId" />
-                    
-                    <div class="alert alert-info mb-3">
-                        <strong id="stockProductName"></strong><br>
-                        <small>Stock Actual: <span id="stockCurrentValue" class="badge bg-secondary"></span></small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Tipo de Ajuste</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="stockAdjustmentType" id="stockTypeAdd" value="add" checked />
-                            <label class="btn btn-outline-success" for="stockTypeAdd">
-                                <i class="bi bi-plus-circle"></i> Agregar
-                            </label>
-
-                            <input type="radio" class="btn-check" name="stockAdjustmentType" id="stockTypeSubtract" value="subtract" />
-                            <label class="btn btn-outline-danger" for="stockTypeSubtract">
-                                <i class="bi bi-dash-circle"></i> Restar
-                            </label>
-
-                            <input type="radio" class="btn-check" name="stockAdjustmentType" id="stockTypeSet" value="set" />
-                            <label class="btn btn-outline-primary" for="stockTypeSet">
-                                <i class="bi bi-arrow-repeat"></i> Establecer
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="stockQuantity" class="form-label">Cantidad <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control form-control-lg" id="stockQuantity" 
-                               min="0" value="1" required />
-                    </div>
-
-                    <div id="stockPreview" class="alert alert-secondary">
-                        <strong>Nuevo Stock:</strong> <span id="stockNewValue" class="fs-5">0</span> unidades
-                    </div>
-
-                    <div class="d-grid">
-                        <a href="#" id="stockDetailLink" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-arrow-right-circle"></i> Ir a ajuste detallado
-                        </a>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Confirmar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
     <script>
         let currentProductId = null;
-        let currentStockProductId = null;
-        let currentStockValue = 0;
         let statusToggleProductId = null;
+
+        async function openDetailsModal(productId) {
+            try {
+                const response = await fetch('/Products/Details?id=' + productId);
+
+                if (!response.ok) {
+                    throw new Error('Producto no encontrado');
+                }
+
+                const html = await response.text();
+                document.getElementById('detailsModalContent').innerHTML = html;
+
+                const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error loading product details:', error);
+                alert('Error al cargar los detalles del producto: ' + error.message);
+            }
+        }
 
         function openCreateModal() {
             currentProductId = null;
@@ -367,13 +335,13 @@
             document.getElementById('productIsActive').checked = true;
             document.getElementById('currentImageContainer').classList.add('d-none');
             document.getElementById('imagePreview').classList.add('d-none');
-            document.getElementById('formErrors').classList.add('d-none');
+            document.getElementById('formErrors')?.classList.add('d-none');
         }
 
         async function openEditModal(productId) {
             currentProductId = productId;
             document.getElementById('productModalLabel').textContent = 'Editar Producto';
-            document.getElementById('formErrors').classList.add('d-none');
+            document.getElementById('formErrors')?.classList.add('d-none');
             
             try {
                 const response = await fetch('/Products/Index?handler=ProductData&id=' + productId);
@@ -425,50 +393,6 @@
             modal.show();
         }
 
-        function openQuickStockModal(productId, productName, stock) {
-            currentStockProductId = productId;
-            currentStockValue = stock;
-            
-            document.getElementById('stockProductId').value = productId;
-            document.getElementById('stockProductName').textContent = productName;
-            document.getElementById('stockCurrentValue').textContent = stock;
-            document.getElementById('stockQuantity').value = '1';
-            document.getElementById('stockTypeAdd').checked = true;
-            document.getElementById('stockDetailLink').href = '/Products/AdjustStock?id=' + productId;
-            
-            updateStockPreview();
-            
-            const modal = new bootstrap.Modal(document.getElementById('quickStockModal'));
-            modal.show();
-        }
-
-        function updateStockPreview() {
-            const quantity = parseInt(document.getElementById('stockQuantity').value) || 0;
-            const type = document.querySelector('input[name="stockAdjustmentType"]:checked')?.value;
-            
-            let newStock = currentStockValue;
-            
-            if (type === 'add') {
-                newStock = currentStockValue + quantity;
-            } else if (type === 'subtract') {
-                newStock = Math.max(0, currentStockValue - quantity);
-            } else if (type === 'set') {
-                newStock = quantity;
-            }
-            
-            document.getElementById('stockNewValue').textContent = newStock;
-            
-            const preview = document.getElementById('stockPreview');
-            preview.className = 'alert';
-            if (newStock === 0) {
-                preview.classList.add('alert-danger');
-            } else if (newStock < 10) {
-                preview.classList.add('alert-warning');
-            } else {
-                preview.classList.add('alert-success');
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             // Double-click row to open details
             document.addEventListener('click', function(e) {
@@ -482,7 +406,7 @@
                 const row = e.target.closest('tr[data-product-id]');
                 if (row) {
                     const productId = row.getAttribute('data-product-id');
-                    window.location.href = '/Products/Details?id=' + productId;
+                    openDetailsModal(productId);
                 }
             });
 
@@ -500,12 +424,6 @@
                 } else {
                     document.getElementById('imagePreview').classList.add('d-none');
                 }
-            });
-
-            // Stock preview updates
-            document.getElementById('stockQuantity').addEventListener('input', updateStockPreview);
-            document.querySelectorAll('input[name="stockAdjustmentType"]').forEach(input => {
-                input.addEventListener('change', updateStockPreview);
             });
 
             // Confirm status change
@@ -529,48 +447,6 @@
                 }
             });
 
-            // Quick stock adjustment form
-            document.getElementById('quickStockForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const quantity = parseInt(document.getElementById('stockQuantity').value);
-                const type = document.querySelector('input[name="stockAdjustmentType"]:checked')?.value;
-                
-                let newStock = currentStockValue;
-                if (type === 'add') {
-                    newStock = currentStockValue + quantity;
-                } else if (type === 'subtract') {
-                    newStock = Math.max(0, currentStockValue - quantity);
-                } else if (type === 'set') {
-                    newStock = quantity;
-                }
-                
-                try {
-                    const formData = new FormData();
-                    formData.append('productId', currentStockProductId);
-                    formData.append('newStock', newStock);
-                    
-                    const response = await fetch('/Products/Index?handler=QuickStockUpdate', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                        }
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('quickStockModal'));
-                        modal.hide();
-                        window.location.href = '/Products/Index?successMessage=' + encodeURIComponent(result.message);
-                    }
-                } catch (error) {
-                    console.error('Error updating stock:', error);
-                    alert('Error al actualizar el stock');
-                }
-            });
-
             // Product form submission
             document.getElementById('productForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -583,7 +459,7 @@
                 }
                 
                 const formErrors = document.getElementById('formErrors');
-                formErrors.classList.add('d-none');
+                formErrors?.classList?.add('d-none');
                 
                 const saveBtn = document.getElementById('saveProductBtn');
                 const originalBtnText = saveBtn.innerHTML;

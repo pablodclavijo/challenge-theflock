@@ -1,0 +1,171 @@
+@model AdminPanel.Models.Product
+@using AdminPanel.Models
+
+<div class="modal-body" style="max-height: 80vh; overflow-y: auto; padding: 2rem;">
+    <!-- Product Header with Image -->
+    <div class="mb-4">
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <div class="d-flex gap-3 align-items-start mb-4">
+                <img src="@Model.ImageUrl" alt="@Model.Name" 
+                     class="rounded-3" style="width: 120px; height: 120px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+                <div class="flex-grow-1">
+                    <h4 class="mb-2">@Model.Name</h4>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge bg-secondary"><i class="bi bi-tag"></i> @(Model.Category?.Name ?? "Sin categoría")</span>
+                        @{
+                            var stockClass = Model.Stock == 0 ? "danger" : (Model.Stock < 10 ? "warning" : "success");
+                        }
+                        <span class="badge bg-@stockClass"><i class="bi bi-box-seam"></i> @Model.Stock unidades</span>
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Inactivo</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <h4 class="mb-3">@Model.Name</h4>
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="badge bg-secondary"><i class="bi bi-tag"></i> @(Model.Category?.Name ?? "Sin categoría")</span>
+                    @{
+                        var stockClass = Model.Stock == 0 ? "danger" : (Model.Stock < 10 ? "warning" : "success");
+                    }
+                    <span class="badge bg-@stockClass"><i class="bi bi-box-seam"></i> @Model.Stock unidades</span>
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Activo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Inactivo</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Description -->
+    <div class="mb-4">
+        <h6 class="text-muted small text-uppercase fw-bold mb-2">Descripción</h6>
+        <p class="mb-0">@Model.Description</p>
+    </div>
+
+    <!-- Key Details Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+            <div class="p-3 rounded-2" style="background-color: #f8f9fa;">
+                <small class="text-muted text-uppercase fw-bold">Precio</small>
+                <h5 class="text-success mb-0 mt-1">$@Model.Price.ToString("N2")</h5>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="p-3 rounded-2" style="background-color: #f8f9fa;">
+                <small class="text-muted text-uppercase fw-bold">Stock Actual</small>
+                <h5 class="mb-0 mt-1">
+                    @{
+                        var stockDisplayClass = Model.Stock == 0 ? "text-danger" : (Model.Stock < 10 ? "text-warning" : "text-success");
+                    }
+                    <span class="@stockDisplayClass">@Model.Stock</span> unidades
+                </h5>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="d-flex gap-4 mb-4 pb-3 border-bottom small">
+        <div>
+            <span class="text-muted">Creado:</span><br>
+            <span class="fw-500">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+        <div>
+            <span class="text-muted">Actualizado:</span><br>
+            <span class="fw-500">@Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+    </div>
+
+    <!-- Stock Movement History -->
+    <div class="mt-4">
+        <h6 class="mb-3 text-uppercase fw-bold small">Historial de Movimientos</h6>
+        @{
+            var stockMovements = ViewBag.StockMovements as List<StockMovement> ?? new List<StockMovement>();
+        }
+
+        @if (stockMovements.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-borderless">
+                    <thead>
+                        <tr class="border-bottom">
+                            <th class="text-muted small">Fecha</th>
+                            <th class="text-muted small">Tipo</th>
+                            <th class="text-muted small text-center">Anterior</th>
+                            <th class="text-muted small text-center">Cambio</th>
+                            <th class="text-muted small text-center">Nuevo</th>
+                            <th class="text-muted small">Motivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var movement in stockMovements.OrderByDescending(m => m.CreatedAt).Take(10))
+                        {
+                            <tr class="border-bottom small">
+                                <td class="text-muted">@movement.CreatedAt.ToString("dd/MM HH:mm")</td>
+                                <td>
+                                    @{
+                                        var (badgeClass, icon, label) = movement.MovementType switch
+                                        {
+                                            "Add" => ("success", "plus-circle", "Entrada"),
+                                            "Subtract" => ("danger", "dash-circle", "Salida"),
+                                            "Set" => ("primary", "arrow-repeat", "Ajuste"),
+                                            _ => ("secondary", "box-seam", movement.MovementType)
+                                        };
+                                    }
+                                    <span class="badge bg-@badgeClass"><i class="bi bi-@icon"></i> @label</span>
+                                </td>
+                                <td class="text-center">@movement.PreviousStock</td>
+                                <td class="text-center fw-bold">
+                                    @if (movement.MovementType == "Add")
+                                    {
+                                        <span class="text-success">+@movement.Quantity</span>
+                                    }
+                                    else if (movement.MovementType == "Subtract")
+                                    {
+                                        <span class="text-danger">-@movement.Quantity</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">@movement.Quantity</span>
+                                    }
+                                </td>
+                                <td class="text-center fw-bold">@movement.NewStock</td>
+                                <td class="text-muted">@(movement.Reason ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                <p class="text-muted small mt-2">No hay movimientos de stock registrados</p>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal-footer border-top-0 pt-0">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="bi bi-x-lg"></i> Cerrar
+    </button>
+</div>

@@ -88,7 +88,7 @@ namespace AdminPanel.Controllers
             var stockMovements = await _productService.GetProductStockMovementsAsync(id.Value);
             ViewBag.StockMovements = stockMovements;
 
-            return View(product);
+            return PartialView("_ProductDetailsModal", product);
         }
 
         // GET: Products/Create
