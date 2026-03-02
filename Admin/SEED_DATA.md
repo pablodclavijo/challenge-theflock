@@ -10,6 +10,7 @@ Este documento describe los datos de prueba (seed data) generados automáticament
 - **Nombre:** Administrador del Sistema
 - **Rol:** Admin
 - **Dirección:** Calle Principal 123, Ciudad
+- **Acceso:** ? Panel de Administración
 
 ### 3 Vendedores
 1. **Email:** vendedor1@tienda.com
@@ -17,44 +18,66 @@ Este documento describe los datos de prueba (seed data) generados automáticament
    - **Nombre:** Carlos Martínez
    - **Rol:** Vendedor
    - **Dirección:** Av. Comercio 456, Local 5
+   - **Acceso:** ? Panel de Administración
 
 2. **Email:** vendedor2@tienda.com
    - **Contraseña:** Vendedor123!
    - **Nombre:** Ana García
    - **Rol:** Vendedor
    - **Dirección:** Plaza Central 789, Piso 2
+   - **Acceso:** ? Panel de Administración
 
 3. **Email:** vendedor3@tienda.com
    - **Contraseña:** Vendedor123!
    - **Nombre:** Luis Rodríguez
    - **Rol:** Vendedor
    - **Dirección:** Calle del Mercado 321, Oficina 10
+   - **Acceso:** ? Panel de Administración
 
 ### 5 Compradores
 1. **Email:** comprador1@email.com
    - **Contraseña:** Comprador123!
    - **Nombre:** María López
    - **Dirección:** Residencial Los Pinos 123
+   - **Acceso:** ? Solo Aplicación de Tienda (Shop)
 
 2. **Email:** comprador2@email.com
    - **Contraseña:** Comprador123!
    - **Nombre:** Juan Pérez
    - **Dirección:** Urbanización El Rosal 456
+   - **Acceso:** ? Solo Aplicación de Tienda (Shop)
 
 3. **Email:** comprador3@email.com
    - **Contraseña:** Comprador123!
    - **Nombre:** Patricia Sánchez
    - **Dirección:** Conjunto Habitacional Vista Hermosa 789
+   - **Acceso:** ? Solo Aplicación de Tienda (Shop)
 
 4. **Email:** comprador4@email.com
    - **Contraseña:** Comprador123!
    - **Nombre:** Roberto González
    - **Dirección:** Barrio San José 234
+   - **Acceso:** ? Solo Aplicación de Tienda (Shop)
 
 5. **Email:** comprador5@email.com
    - **Contraseña:** Comprador123!
    - **Nombre:** Laura Fernández
    - **Dirección:** Colonia Primavera 567
+   - **Acceso:** ? Solo Aplicación de Tienda (Shop)
+
+## ?? Importante: Restricción de Acceso para Compradores
+
+**Los compradores NO pueden acceder al Panel de Administración.**
+
+Si un comprador intenta iniciar sesión en el Admin Panel, recibirá el siguiente mensaje de error:
+
+> "Los compradores no tienen acceso al panel de administración. Por favor, use la aplicación de tienda."
+
+Los compradores deben usar la aplicación **Shop** (frontend de la tienda) para:
+- Ver catálogo de productos
+- Agregar productos al carrito
+- Realizar pedidos
+- Ver historial de pedidos
 
 ## Categorías Creadas (7 categorías)
 
@@ -128,9 +151,16 @@ Los pedidos se generan automáticamente con las siguientes características:
 
 ## Cómo Usar los Datos de Prueba
 
+### Para Admin Panel
+
 1. **Primera ejecución:** Al iniciar la aplicación por primera vez, los datos se crearán automáticamente
-2. **Re-seed:** Para regenerar los datos, elimina la base de datos y vuelve a ejecutar la aplicación
-3. **Login:** Usa cualquiera de las credenciales listadas arriba según el rol que quieras probar
+2. **Login Admin:** admin@admin.com / Admin123!
+3. **Login Vendedor:** vendedor1@tienda.com / Vendedor123!
+
+### Para Shop (Aplicación de Tienda)
+
+1. **Login Comprador:** comprador1@email.com / Comprador123!
+2. Los compradores **NO** pueden acceder al Admin Panel
 
 ## Notas Importantes
 
@@ -140,6 +170,19 @@ Los pedidos se generan automáticamente con las siguientes características:
 - Los stocks varían para simular diferentes niveles de inventario
 - Las fechas de creación están distribuidas en el tiempo para datos más realistas
 - Los pedidos más antiguos tienen estado "Delivered", los más recientes "Pending"
+- **Los compradores están bloqueados del Admin Panel** - deben usar Shop
+
+## Control de Acceso por Rol
+
+| Funcionalidad | Admin | Vendedor | Comprador |
+|--------------|-------|----------|-----------|
+| Dashboard | ? | ? | ? |
+| Productos | ? | ? | ? |
+| Categorías | ? | ? | ? |
+| Pedidos | ? | ? | ? |
+| Usuarios | ? | ? | ? |
+| Reportes | ? | ? | ? |
+| Shop (Tienda) | ? | ? | ? |
 
 ## Base de Datos
 
@@ -153,3 +196,4 @@ Esto asegura que:
 1. Las migraciones se apliquen automáticamente
 2. Los datos solo se crean si no existen
 3. La aplicación esté lista para usar inmediatamente después del primer inicio
+4. Los controles de acceso se apliquen correctamente

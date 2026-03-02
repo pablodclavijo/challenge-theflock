@@ -1,3 +1,4 @@
+using AdminPanel.Constants;
 using AdminPanel.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -72,6 +73,14 @@ namespace AdminPanel.Pages.Account
             if (!user.IsActive)
             {
                 ModelState.AddModelError(string.Empty, "Su cuenta ha sido desactivada. Contacte al administrador.");
+                return Page();
+            }
+
+            // Check if user is a buyer (Comprador) - they cannot access Admin Panel
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles.Contains(Roles.Comprador))
+            {
+                ModelState.AddModelError(string.Empty, "Los compradores no tienen acceso al panel de administración. Por favor, use la aplicación de tienda.");
                 return Page();
             }
 
