@@ -1,6 +1,75 @@
-# Resumen de Implementación - Admin Panel UI
+# Quick Start Guide - Admin Panel
 
-## ? Lo que se ha creado
+## Requisitos Previos
+
+- .NET 8 SDK instalado
+- PostgreSQL instalado y ejecutándose
+- Git (opcional, para clonar el repositorio)
+
+## Configuración Inicial
+
+### 1. Configurar la Base de Datos
+
+Edita `appsettings.json` con tu cadena de conexión de PostgreSQL:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=adminpanel;Username=postgres;Password=tu_contraseña"
+  }
+}
+```
+
+### 2. Aplicar Migraciones y Datos de Prueba
+
+El seed se ejecuta automáticamente al iniciar la aplicación. No necesitas ejecutar comandos adicionales.
+
+```bash
+dotnet run
+```
+
+La aplicación automáticamente:
+- Aplicará todas las migraciones pendientes
+- Creará los roles (Admin, Vendedor, Comprador)
+- Generará usuarios de prueba
+- Creará categorías y productos
+- Generará pedidos de ejemplo
+
+### 3. Acceder a la Aplicación
+
+Abre tu navegador en: `https://localhost:7000` (o el puerto configurado)
+
+## Credenciales de Acceso
+
+### Administrador
+- **Email:** admin@admin.com
+- **Contraseña:** Admin123!
+- **Permisos:** Acceso completo a todas las funcionalidades
+
+### Vendedor (3 cuentas disponibles)
+- **Email:** vendedor1@tienda.com
+- **Contraseña:** Vendedor123!
+- **Permisos:** Gestión de productos, inventario y pedidos
+
+### Comprador (5 cuentas disponibles)
+- **Email:** comprador1@email.com
+- **Contraseña:** Comprador123!
+- **Permisos:** Ver productos y realizar pedidos (rol para futuras funcionalidades)
+
+## Datos Generados Automáticamente
+
+? **1 Administrador**
+? **3 Vendedores**
+? **5 Compradores**
+? **7 Categorías** (Electrónica, Ropa, Hogar, Deportes, Libros, Juguetes, Belleza)
+? **25+ Productos** distribuidos en todas las categorías
+? **12+ Pedidos** en diferentes estados (Pending, Confirmed, Shipped, Delivered)
+
+Para más detalles sobre todos los datos generados, consulta `SEED_DATA.md`.
+
+---
+
+## ?? Lo que se ha creado
 
 ### 1. **Layout Responsivo con Sidebar** (`_AdminLayout.cshtml`)
 - Sidebar fijo en desktop (?768px)
@@ -82,7 +151,7 @@ namespace AdminPanel.Pages.YourSection
 @model YourSection.IndexModel
 @{
     ViewData["Title"] = "Tu Título";
-    Layout = "_AdminLayout";  // ? Importante: usar el layout de admin
+    Layout = "_AdminLayout";  // ?? Importante: usar el layout de admin
 }
 
 <div class="page-header">
@@ -133,7 +202,7 @@ Para cambiar los colores, edita las variables CSS en `admin-layout.css`:
 
 ---
 
-## ?? Agregar nuevos items al menú
+## ? Agregar nuevos items al menú
 
 Edita `_AdminLayout.cshtml`, sección `<nav class="sidebar-nav">`:
 
@@ -285,6 +354,12 @@ AdminPanel/
 - Limpia caché del navegador (Ctrl+F5)
 - Verifica que `admin-layout.css` esté en wwwroot/css
 - Comprueba que el link en `_AdminLayout.cshtml` sea correcto
+
+### Los datos de seed no se generan
+- Verifica que PostgreSQL esté ejecutándose
+- Confirma la cadena de conexión en `appsettings.json`
+- Revisa los logs de la aplicación para errores de migración
+- Si ya existen datos, el seed no se ejecutará nuevamente
 
 ---
 
