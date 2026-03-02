@@ -1,20 +1,18 @@
 using AdminPanel.Constants;
-using AdminPanel.Data;
-using AdminPanel.Enums;
+using AdminPanel.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanel.Pages.Reports
 {
     [Authorize(Roles = Roles.Admin)]
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDashboardService _dashboardService;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(IDashboardService dashboardService)
         {
-            _context = context;
+            _dashboardService = dashboardService;
         }
 
         // Ventas por período
@@ -48,52 +46,30 @@ namespace AdminPanel.Pages.Reports
 
         public async Task OnGetAsync()
         {
-            var today = DateTime.UtcNow.Date;
-            var weekAgo = today.AddDays(-7);
-            var monthAgo = today.AddMonths(-1);
+            var metrics = await _dashboardService.GetDashboardMetricsAsync();
 
-            // Ventas por período
-            TodaySales = await _context.Orders
-                .Where(o => o.CreatedAt.Date == today && o.Status == OrderStatus.Delivered)
-                .SumAsync(o => (decimal?)o.Total) ?? 0;
+            TodaySales = metrics.TodayRevenue;
+            WeekSales = metrics.WeekRevenue;
+            MonthSales = metrics.MonthRevenue;
+            TotalSales = metrics.TotalRevenue;
 
-            WeekSales = await _context.Orders
-                .Where(o => o.CreatedAt >= weekAgo && o.Status == OrderStatus.Delivered)
-                .SumAsync(o => (decimal?)o.Total) ?? 0;
+            PendingOrders = metrics.PendingOrders;
+            ConfirmedOrders = metrics.ConfirmedOrders;
+            ShippedOrders = metrics.ShippedOrders;
+            DeliveredOrders = metrics.DeliveredOrders;
 
-            MonthSales = await _context.Orders
-                .Where(o => o.CreatedAt >= monthAgo && o.Status == OrderStatus.Delivered)
-                .SumAsync(o => (decimal?)o.Total) ?? 0;
+            TopProducts = metrics.TopProducts.Select(p => new TopProductViewModel
+            {
+                ProductName = p.ProductName,
+                QuantitySold = p.QuantitySold,
+                TotalRevenue = p.TotalRevenue
+            }).ToList();
 
-            TotalSales = await _context.Orders
-                .Where(o => o.Status == OrderStatus.Delivered)
-                .SumAsync(o => (decimal?)o.Total) ?? 0;
-
-            // Órdenes por estado
-            PendingOrders = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Pending);
-            ConfirmedOrders = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Confirmed);
-            ShippedOrders = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Shipped);
-            DeliveredOrders = await _context.Orders.CountAsync(o => o.Status == OrderStatus.Delivered);
-
-            // Productos más vendidos
-            TopProducts = await _context.OrderItems
-                .GroupBy(oi => new { oi.ProductId, oi.ProductNameSnapshot })
-                .Select(g => new TopProductViewModel
-                {
-                    ProductName = g.Key.ProductNameSnapshot,
-                    QuantitySold = g.Sum(oi => oi.Quantity),
-                    TotalRevenue = g.Sum(oi => oi.LineTotal)
-                })
-                .OrderByDescending(p => p.QuantitySold)
-                .Take(10)
-                .ToListAsync();
-
-            // Estadísticas generales
-            TotalOrders = await _context.Orders.CountAsync();
-            TotalProducts = await _context.Products.CountAsync();
-            TotalCategories = await _context.Categories.CountAsync();
-            TotalUsers = await _context.Users.CountAsync();
-            LowStockProducts = await _context.Products.CountAsync(p => p.Stock < 10 && p.Stock > 0);
+            TotalOrders = metrics.TotalOrders;
+            TotalProducts = metrics.TotalProducts;
+            TotalCategories = metrics.TotalCategories;
+            TotalUsers = metrics.TotalUsers;
+            LowStockProducts = metrics.LowStockProducts;
         }
     }
 }

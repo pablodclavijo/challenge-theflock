@@ -1,0 +1,111 @@
+@page
+@model AdminPanel.Pages.Users.EditModel
+@{
+    ViewData["Title"] = "Editar Usuario";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1>Editar Usuario</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-page="./Index">Usuarios</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Editar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2>Información del Usuario</h2>
+            </div>
+            <div class="admin-card-body">
+                <form method="post">
+                    <input type="hidden" asp-for="Input.Id" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Input.Email" class="form-label"></label>
+                            <input asp-for="Input.Email" class="form-control" />
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Input.FullName" class="form-label"></label>
+                            <input asp-for="Input.FullName" class="form-control" />
+                            <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Input.ShippingAddress" class="form-label"></label>
+                            <textarea asp-for="Input.ShippingAddress" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Input.ShippingAddress" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Input.Role" class="form-label"></label>
+                            <select asp-for="Input.Role" asp-items="Model.RolesList" class="form-select">
+                                <option value="">Seleccione un rol</option>
+                            </select>
+                            <span asp-validation-for="Input.Role" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Estado</label>
+                            <div>
+                                <div class="form-check form-switch">
+                                    <input asp-for="Input.IsActive" class="form-check-input" />
+                                    <label asp-for="Input.IsActive" class="form-check-label"></label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input asp-for="Input.EmailConfirmed" class="form-check-input" />
+                                    <label asp-for="Input.EmailConfirmed" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h3 class="h5 mb-3">Cambiar Contraseña (Opcional)</h3>
+                    <p class="text-muted small">Deje estos campos vacíos si no desea cambiar la contraseña</p>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Input.NewPassword" class="form-label"></label>
+                            <input asp-for="Input.NewPassword" class="form-control" />
+                            <span asp-validation-for="Input.NewPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Input.ConfirmPassword" class="form-label"></label>
+                            <input asp-for="Input.ConfirmPassword" class="form-control" />
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Guardar Cambios
+                        </button>
+                        <a asp-page="./Index" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

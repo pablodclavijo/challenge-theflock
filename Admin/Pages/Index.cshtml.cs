@@ -1,19 +1,18 @@
 using AdminPanel.Constants;
-using AdminPanel.Data;
+using AdminPanel.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanel.Pages
 {
     [Authorize(Roles = $"{Roles.Admin},{Roles.Vendedor}")]
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDashboardService _dashboardService;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(IDashboardService dashboardService)
         {
-            _context = context;
+            _dashboardService = dashboardService;
         }
 
         public int TotalProducts { get; set; }
@@ -31,35 +30,31 @@ namespace AdminPanel.Pages
         {
             IsAdmin = User.IsInRole(Roles.Admin);
 
-            TotalProducts = await _context.Products.CountAsync();
-            TotalOrders = await _context.Orders.CountAsync();
-
-            TotalRevenue = await _context.Orders
-                .Where(o => o.Status == Enums.OrderStatus.Delivered)
-                .SumAsync(o => (decimal?)o.Total) ?? 0;
-
-            LowStockProducts = await _context.Products
-                .Where(p => p.Stock < 10 && p.Stock > 0)
-                .CountAsync();
-
-            PendingOrders = await _context.Orders
-                .Where(o => o.Status == Enums.OrderStatus.Pending)
-                .CountAsync();
-
-            var today = DateTime.UtcNow.Date;
-            TodayOrders = await _context.Orders
-                .Where(o => o.CreatedAt.Date == today)
-                .CountAsync();
-
-            TodayRevenue = await _context.Orders
-                .Where(o => o.CreatedAt.Date == today && o.Status == Enums.OrderStatus.Delivered)
-                .SumAsync(o => (decimal?)o.Total) ?? 0;
-
-            // Solo admin ve estas estadísticas
             if (IsAdmin)
             {
-                TotalCategories = await _context.Categories.CountAsync();
-                TotalUsers = await _context.Users.CountAsync();
+                var metrics = await _dashboardService.GetDashboardMetricsAsync();
+                
+                TotalProducts = metrics.TotalProducts;
+                TotalCategories = metrics.TotalCategories;
+                TotalOrders = metrics.TotalOrders;
+                TotalUsers = metrics.TotalUsers;
+                TotalRevenue = metrics.TotalRevenue;
+                LowStockProducts = metrics.LowStockProducts;
+                PendingOrders = metrics.PendingOrders;
+                TodayOrders = metrics.TodayOrders;
+                TodayRevenue = metrics.TodayRevenue;
+            }
+            else
+            {
+                var metrics = await _dashboardService.GetVendedorDashboardMetricsAsync();
+                
+                TotalProducts = metrics.TotalProducts;
+                TotalOrders = metrics.TotalOrders;
+                TotalRevenue = metrics.TotalRevenue;
+                LowStockProducts = metrics.LowStockProducts;
+                PendingOrders = metrics.PendingOrders;
+                TodayOrders = metrics.TodayOrders;
+                TodayRevenue = metrics.TodayRevenue;
             }
         }
     }

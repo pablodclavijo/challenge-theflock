@@ -103,11 +103,20 @@
                                            class="btn btn-outline-secondary" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a asp-page="./ToggleStatus" asp-route-id="@user.Id" 
-                                           class="btn btn-outline-@(user.IsActive ? "warning" : "success")" 
-                                           title="@(user.IsActive ? "Desactivar" : "Activar")">
-                                            <i class="bi bi-@(user.IsActive ? "lock" : "unlock")"></i>
-                                        </a>
+                                        @if (user.Role != AdminPanel.Constants.Roles.Admin)
+                                        {
+                                            <a asp-page="./ToggleStatus" asp-route-id="@user.Id" 
+                                               class="btn btn-outline-@(user.IsActive ? "warning" : "success")" 
+                                               title="@(user.IsActive ? "Desactivar" : "Activar")">
+                                                <i class="bi bi-@(user.IsActive ? "lock" : "unlock")"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-outline-secondary" disabled title="No se puede desactivar a otro administrador">
+                                                <i class="bi bi-shield-lock"></i>
+                                            </button>
+                                        }
                                     </div>
                                 </td>
                             </tr>

@@ -1,20 +1,18 @@
 using AdminPanel.Constants;
-using AdminPanel.Models;
+using AdminPanel.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanel.Pages.Users
 {
     [Authorize(Roles = Roles.Admin)]
     public class IndexModel : PageModel
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserService _userService;
 
-        public IndexModel(UserManager<ApplicationUser> userManager)
+        public IndexModel(IUserService userService)
         {
-            _userManager = userManager;
+            _userService = userService;
         }
 
         public List<UserViewModel> Users { get; set; } = new();
@@ -32,28 +30,18 @@ namespace AdminPanel.Pages.Users
 
         public async Task OnGetAsync()
         {
-            var allUsers = await _userManager.Users
-                .OrderByDescending(u => u.CreatedAt)
-                .ToListAsync();
+            var userDtos = await _userService.GetAllUsersWithRolesAsync();
 
-            Users = new List<UserViewModel>();
-
-            foreach (var user in allUsers)
+            Users = userDtos.Select(u => new UserViewModel
             {
-                var roles = await _userManager.GetRolesAsync(user);
-                var role = roles.FirstOrDefault() ?? "Sin rol";
-
-                Users.Add(new UserViewModel
-                {
-                    Id = user.Id,
-                    Email = user.Email!,
-                    FullName = user.FullName,
-                    IsActive = user.IsActive,
-                    CreatedAt = user.CreatedAt,
-                    Role = role,
-                    EmailConfirmed = user.EmailConfirmed
-                });
-            }
+                Id = u.Id,
+                Email = u.Email,
+                FullName = u.FullName,
+                IsActive = u.IsActive,
+                CreatedAt = u.CreatedAt,
+                Role = u.Role,
+                EmailConfirmed = u.EmailConfirmed
+            }).ToList();
         }
     }
 }

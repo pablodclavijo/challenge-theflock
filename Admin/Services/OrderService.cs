@@ -125,6 +125,33 @@ namespace AdminPanel.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task<decimal> GetSalesByPeriodAsync(DateTime from, DateTime to)
+        {
+            return await _context.Orders
+                .Where(o => o.CreatedAt >= from && o.CreatedAt <= to && o.Status == OrderStatus.Delivered)
+                .SumAsync(o => (decimal?)o.Total) ?? 0;
+        }
+
+        public async Task<int> GetOrderCountByStatusAsync(OrderStatus status)
+        {
+            return await _context.Orders.CountAsync(o => o.Status == status);
+        }
+
+        public async Task<List<TopProductDto>> GetTopSellingProductsAsync(int count = 10)
+        {
+            return await _context.OrderItems
+                .GroupBy(oi => new { oi.ProductId, oi.ProductNameSnapshot })
+                .Select(g => new TopProductDto
+                {
+                    ProductName = g.Key.ProductNameSnapshot,
+                    QuantitySold = g.Sum(oi => oi.Quantity),
+                    TotalRevenue = g.Sum(oi => oi.LineTotal)
+                })
+                .OrderByDescending(p => p.QuantitySold)
+                .Take(count)
+                .ToListAsync();
+        }
+
         private bool IsValidStatusTransition(OrderStatus from, OrderStatus to)
         {
             return (from, to) switch

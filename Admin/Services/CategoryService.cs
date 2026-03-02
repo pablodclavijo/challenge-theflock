@@ -19,6 +19,13 @@ namespace AdminPanel.Services
             return await _context.Categories.FindAsync(id);
         }
 
+        public async Task<Category?> GetCategoryWithProductsAsync(int id)
+        {
+            return await _context.Categories
+                .Include(c => c.Products)
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
         public async Task<List<Category>> GetAllCategoriesAsync()
         {
             return await _context.Categories
@@ -34,6 +41,13 @@ namespace AdminPanel.Services
                 .ToListAsync();
         }
 
+        public IQueryable<Category> GetCategoriesQuery()
+        {
+            return _context.Categories
+                .Include(c => c.Products)
+                .AsQueryable();
+        }
+
         public async Task<List<SelectListItem>> GetCategorySelectListAsync()
         {
             return await _context.Categories
@@ -45,6 +59,31 @@ namespace AdminPanel.Services
                     Text = c.Name
                 })
                 .ToListAsync();
+        }
+
+        public async Task<Category> CreateCategoryAsync(Category category)
+        {
+            category.CreatedAt = DateTime.UtcNow;
+            _context.Categories.Add(category);
+            await _context.SaveChangesAsync();
+            return category;
+        }
+
+        public async Task<Category> UpdateCategoryAsync(Category category)
+        {
+            _context.Categories.Update(category);
+            await _context.SaveChangesAsync();
+            return category;
+        }
+
+        public async Task DeleteCategoryAsync(int id)
+        {
+            var category = await GetCategoryByIdAsync(id);
+            if (category != null)
+            {
+                _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

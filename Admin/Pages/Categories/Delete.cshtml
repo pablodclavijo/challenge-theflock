@@ -1,0 +1,89 @@
+@page
+@model AdminPanel.Pages.Categories.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar Categoría";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1>Eliminar Categoría</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a asp-page="./Index">Categorías</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Eliminar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="admin-card">
+            <div class="admin-card-header bg-danger text-white">
+                <h2><i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación</h2>
+            </div>
+            <div class="admin-card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>¿Está seguro que desea eliminar esta categoría?</strong>
+                    <p class="mb-0 mt-2">Esta acción no se puede deshacer.</p>
+                </div>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Nombre:</dt>
+                    <dd class="col-sm-9"><strong>@Model.Category.Name</strong></dd>
+
+                    <dt class="col-sm-3">Estado:</dt>
+                    <dd class="col-sm-9">
+                        @if (Model.Category.IsActive)
+                        {
+                            <span class="badge bg-success">Activa</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Inactiva</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-3">Productos:</dt>
+                    <dd class="col-sm-9">
+                        @if (Model.Category.Products != null && Model.Category.Products.Any())
+                        {
+                            <span class="badge bg-warning text-dark">@Model.Category.Products.Count producto(s)</span>
+                            <div class="alert alert-danger mt-2 mb-0">
+                                <i class="bi bi-x-circle"></i> No se puede eliminar esta categoría porque tiene productos asociados.
+                                Primero debe reasignar o eliminar los productos.
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Sin productos asociados</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-3">Fecha de Creación:</dt>
+                    <dd class="col-sm-9">@Model.Category.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                </dl>
+
+                <form method="post" class="mt-4">
+                    <input type="hidden" asp-for="Category.Id" />
+                    <div class="d-flex gap-2">
+                        @if (Model.Category.Products == null || !Model.Category.Products.Any())
+                        {
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Eliminar Categoría
+                            </button>
+                        }
+                        <a asp-page="./Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
