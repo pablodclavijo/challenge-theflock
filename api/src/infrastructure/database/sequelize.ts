@@ -1,4 +1,6 @@
 import { Sequelize } from "sequelize";
+import { Umzug, SequelizeStorage } from "umzug";
+import path from "path";
 import { env } from "../config/env";
 import { initModels } from "../persistence/sequelize/models";
 
@@ -11,6 +13,16 @@ export const sequelize = new Sequelize(env.db.name, env.db.user, env.db.password
 
 initModels(sequelize);
 
+const umzug = new Umzug({
+  migrations: {
+    glob: path.join(__dirname, "../../../sequelize/migrations/*.{js,cjs}"),
+  },
+  context: sequelize.getQueryInterface(),
+  storage: new SequelizeStorage({ sequelize }),
+  logger: console,
+});
+
 export const connectDatabase = async (): Promise<void> => {
   await sequelize.authenticate();
+  await umzug.up();
 };
