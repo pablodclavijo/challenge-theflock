@@ -51,64 +51,64 @@ Authorization: Bearer <JWT>
 
 ---
 
-## Users
+## Usuarios
 
-All routes require auth + buyer role.
+Todas las rutas requieren autenticación + rol de comprador.
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/users/profile` | ✅ Buyer | Get authenticated user's profile |
-| PUT | `/users/profile` | ✅ Buyer | Update fullName and/or shippingAddress |
+| Método | Ruta | Autenticación | Descripción |
+|--------|------|-------|-------------|
+| GET | `/users/profile` | ✅ Comprador | Obtiene el perfil del usuario autenticado |
+| PUT | `/users/profile` | ✅ Comprador | Actualiza el nombre completo y/o dirección de envío |
 
 ### PUT `/users/profile`
-**Body** (all fields optional)
+**Cuerpo** (todos los campos opcionales)
 ```json
-{ "fullName": "New Name", "shippingAddress": "456 Oak Ave" }
+{ "fullName": "Nuevo Nombre", "shippingAddress": "456 Avenida Roble" }
 ```
 
 ---
 
-## Products
+## Productos
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/products` | — | Paginated list of active products |
-| GET | `/products/:id` | — | Get product detail by ID |
+| Método | Ruta | Autenticación | Descripción |
+|--------|------|-------|-------------|
+| GET | `/products` | — | Lista paginada de productos activos |
+| GET | `/products/:id` | — | Obtiene el detalle del producto por ID |
 
-### GET `/products` — Query params
+### GET `/products` — Parámetros de consulta
 
-| Param | Type | Default | Description |
-|-------|------|---------|-------------|
-| `page` | integer | 1 | Page number |
-| `limit` | integer | 20 | Results per page (max 100) |
-| `category` | integer | — | Filter by category ID |
-| `minPrice` | number | — | Minimum price |
-| `maxPrice` | number | — | Maximum price |
-| `search` | string | — | Case-insensitive name search |
-
----
-
-## Categories
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/categories` | — | List all active categories |
+| Parámetro | Tipo | Por defecto | Descripción |
+|-----------|------|---------|-------------|
+| `page` | entero | 1 | Número de página |
+| `limit` | entero | 20 | Resultados por página (máx 100) |
+| `category` | entero | — | Filtrar por ID de categoría |
+| `minPrice` | número | — | Precio mínimo |
+| `maxPrice` | número | — | Precio máximo |
+| `search` | cadena | — | Búsqueda de nombre insensible a mayúsculas |
 
 ---
 
-## Cart
+## Categorías
 
-All routes require auth + buyer role.
+| Método | Ruta | Autenticación | Descripción |
+|--------|------|-------|-------------|
+| GET | `/categories` | — | Lista todas las categorías activas |
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/cart` | ✅ Buyer | Get current user's cart with product snapshots |
-| POST | `/cart` | ✅ Buyer | Add item to cart (upserts if already present) |
-| PUT | `/cart/:productId` | ✅ Buyer | Update item quantity |
-| DELETE | `/cart/:productId` | ✅ Buyer | Remove item from cart |
+---
+
+## Carrito
+
+Todas las rutas requieren autenticación + rol de comprador.
+
+| Método | Ruta | Autenticación | Descripción |
+|--------|------|-------|-------------|
+| GET | `/cart` | ✅ Comprador | Obtiene el carrito actual del usuario con instantáneas de productos |
+| POST | `/cart` | ✅ Comprador | Agrega un artículo al carrito (actualiza si ya está presente) |
+| PUT | `/cart/:productId` | ✅ Comprador | Actualiza la cantidad del artículo |
+| DELETE | `/cart/:productId` | ✅ Comprador | Elimina un artículo del carrito |
 
 ### GET `/cart`
-**Response `200`**
+**Respuesta `200`**
 ```json
 {
   "items": [
@@ -127,58 +127,58 @@ All routes require auth + buyer role.
 ```
 
 ### POST `/cart`
-**Body**
+**Cuerpo**
 ```json
 { "productId": 10, "quantity": 2 }
 ```
-- Adds `quantity` to any existing quantity in the cart.
-- Returns `409` if combined quantity exceeds available stock.
+- Agrega `quantity` a cualquier cantidad existente en el carrito.
+- Devuelve `409` si la cantidad combinada excede el stock disponible.
 
-**Response `201`** — the upserted cart item.
+**Respuesta `201`** — el artículo del carrito actualizado.
 
 ### PUT `/cart/:productId`
-**Body**
+**Cuerpo**
 ```json
 { "quantity": 5 }
 ```
-- Sets the quantity to the given value (replaces, does not add).
-- Returns `409` if `quantity` exceeds available stock.
+- Establece la cantidad al valor dado (reemplaza, no suma).
+- Devuelve `409` si `quantity` excede el stock disponible.
 
 ### DELETE `/cart/:productId`
-**Response `204`** — no body.
+**Respuesta `204`** — sin cuerpo.
 
 ---
 
-## Orders
+## Pedidos
 
-All routes require auth + buyer role.
+Todas las rutas requieren autenticación + rol de comprador.
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/orders` | ✅ Buyer | Checkout: create order from cart |
-| GET | `/orders` | ✅ Buyer | Buyer's order history (paginated) |
-| GET | `/orders/:id` | ✅ Buyer | Order detail with line items |
-| POST | `/orders/:id/payment` | ✅ Buyer | Process payment (mock service) |
+| Método | Ruta | Autenticación | Descripción |
+|--------|------|-------|-------------|
+| POST | `/orders` | ✅ Comprador | Checkout: crear pedido desde el carrito |
+| GET | `/orders` | ✅ Comprador | Historial de pedidos del comprador (paginado) |
+| GET | `/orders/:id` | ✅ Comprador | Detalle del pedido con artículos de línea |
+| POST | `/orders/:id/payment` | ✅ Comprador | Procesar pago (servicio simulado) |
 
 ### POST `/orders`
-**Body**
+**Cuerpo**
 ```json
-{ "shippingAddress": "42 Elm Street" }
+{ "shippingAddress": "42 Calle Olmo" }
 ```
-- Validates that the cart is not empty.
-- Calculates `subtotal`, `tax` (21 %), and `total`.
-- Saves price snapshots for each line item.
-- Clears the cart on success.
+- Valida que el carrito no esté vacío.
+- Calcula `subtotal`, `tax` (21 %), y `total`.
+- Guarda instantáneas de precios para cada artículo de línea.
+- Limpia el carrito en caso de éxito.
 
-**Response `201`**
+**Respuesta `201`**
 ```json
 {
   "id": 1,
-  "status": "Pending",
+  "status": "Pendiente",
   "subtotal": 100.00,
   "tax": 21.00,
   "total": 121.00,
-  "shippingAddress": "42 Elm Street",
+  "shippingAddress": "42 Calle Olmo",
   "createdAt": "2026-03-02T10:00:00.000Z",
   "items": [
     {
@@ -193,17 +193,17 @@ All routes require auth + buyer role.
 }
 ```
 
-### GET `/orders` — Query params
+### GET `/orders` — Parámetros de consulta
 
-| Param | Type | Default | Description |
-|-------|------|---------|-------------|
-| `page` | integer | 1 | Page number |
-| `limit` | integer | 10 | Results per page (max 100) |
+| Parámetro | Tipo | Por defecto | Descripción |
+|-----------|------|---------|-------------|
+| `page` | entero | 1 | Número de página |
+| `limit` | entero | 10 | Resultados por página (máx 100) |
 
-**Response `200`**
+**Respuesta `200`**
 ```json
 {
-  "data": [{ "id": 1, "status": "Pending", "subtotal": 100.00, "tax": 21.00, "total": 121.00, "shippingAddress": "...", "createdAt": "..." }],
+  "data": [{ "id": 1, "status": "Pendiente", "subtotal": 100.00, "tax": 21.00, "total": 121.00, "shippingAddress": "...", "createdAt": "..." }],
   "total": 1,
   "page": 1,
   "limit": 10,
@@ -212,54 +212,54 @@ All routes require auth + buyer role.
 ```
 
 ### GET `/orders/:id`
-Returns the order detail including all line items (same shape as the checkout response).
+Devuelve el detalle del pedido incluyendo todos los artículos de línea (misma estructura que la respuesta de checkout).
 
 ### POST `/orders/:id/payment`
-Processes payment through the mock payment service.
+Procesa el pago a través del servicio de pago simulado.
 
-**Mock behaviour:** approves 4 out of every 5 consecutive calls; the 5th is rejected. This cycles indefinitely to allow testing both outcomes.
+**Comportamiento simulado:** aprueba 4 de cada 5 llamadas consecutivas; la 5ª es rechazada. Esto se repite indefinidamente para permitir probar ambos resultados.
 
-**Response `200`**
+**Respuesta `200`**
 ```json
 {
   "orderId": 1,
-  "status": "Paid",
+  "status": "Pagado",
   "transactionId": "txn_approved_1_1709380800000",
-  "message": "Payment approved"
+  "message": "Pago aprobado"
 }
 ```
-Or on rejection:
+O en caso de rechazo:
 ```json
 {
   "orderId": 1,
-  "status": "PaymentFailed",
+  "status": "PagoFallido",
   "transactionId": "txn_rejected_1_1709380800000",
-  "message": "Payment declined by issuer"
+  "message": "Pago rechazado por el emisor"
 }
 ```
 
 ---
 
-## Order statuses
+## Estados de Pedidos
 
-| Status | Meaning |
+| Estado | Significado |
 |--------|---------|
-| `Pending` | Order created, payment not yet attempted |
-| `Paid` | Payment approved |
-| `PaymentFailed` | Payment rejected by the mock service |
-| `Confirmed` | Manually confirmed |
-| `Shipped` | Order dispatched |
-| `Delivered` | Order delivered |
+| `Pendiente` | Pedido creado, pago no intentado todavía |
+| `Pagado` | Pago aprobado |
+| `PagoFallido` | Pago rechazado por el servicio simulado |
+| `Confirmado` | Confirmado manualmente |
+| `Enviado` | Pedido enviado |
+| `Entregado` | Pedido entregado |
 
 ---
 
-## Common error responses
+## Respuestas de error comunes
 
-| Status | Body | Trigger |
+| Estado | Cuerpo | Causa |
 |--------|------|---------|
-| 400 | `{ "error": "..." }` | Validation failure or empty cart |
-| 401 | `{ "error": "No token provided" }` | Missing or invalid JWT |
-| 403 | `{ "error": "Access restricted to buyers" }` | Wrong role |
-| 404 | `{ "error": "..." }` | Resource not found |
-| 409 | `{ "error": "Insufficient stock..." }` | Stock exceeded |
-| 500 | `{ "error": "Internal server error" }` | Unexpected error |
+| 400 | `{ "error": "..." }` | Error de validación o carrito vacío |
+| 401 | `{ "error": "No token provided" }` | JWT faltante o inválido |
+| 403 | `{ "error": "Access restricted to buyers" }` | Rol incorrecto |
+| 404 | `{ "error": "..." }` | Recurso no encontrado |
+| 409 | `{ "error": "Insufficient stock..." }` | Stock excedido |
+| 500 | `{ "error": "Internal server error" }` | Error inesperado |
