@@ -5,6 +5,9 @@ import { Category, initCategoryModel } from "./category.model";
 import { OrderItem, initOrderItemModel } from "./orderItem.model";
 import { Order, initOrderModel } from "./order.model";
 import { Product, initProductModel } from "./product.model";
+import { AspNetUser, initAspNetUserModel } from "./aspNetUser.model";
+import { AspNetRole, initAspNetRoleModel } from "./aspNetRole.model";
+import { AspNetUserRole, initAspNetUserRoleModel } from "./aspNetUserRole.model";
 
 export const initModels = (sequelize: Sequelize): void => {
   initApplicationUserModel(sequelize);
@@ -13,6 +16,9 @@ export const initModels = (sequelize: Sequelize): void => {
   initCartItemModel(sequelize);
   initOrderModel(sequelize);
   initOrderItemModel(sequelize);
+  initAspNetUserModel(sequelize);
+  initAspNetRoleModel(sequelize);
+  initAspNetUserRoleModel(sequelize);
 
   Category.hasMany(Product, { foreignKey: "categoryId", as: "products" });
   Product.belongsTo(Category, { foreignKey: "categoryId", as: "category" });
@@ -31,6 +37,21 @@ export const initModels = (sequelize: Sequelize): void => {
 
   Product.hasMany(OrderItem, { foreignKey: "productId", as: "orderItems" });
   OrderItem.belongsTo(Product, { foreignKey: "productId", as: "product" });
+
+  // ASP.NET Identity associations
+  AspNetUser.belongsToMany(AspNetRole, {
+    through: AspNetUserRole,
+    foreignKey: "UserId",
+    otherKey: "RoleId",
+    as: "roles"
+  });
+  AspNetRole.belongsToMany(AspNetUser, {
+    through: AspNetUserRole,
+    foreignKey: "RoleId",
+    otherKey: "UserId",
+    as: "users"
+  });
 };
 
 export { ApplicationUser, CartItem, Category, Order, OrderItem, Product };
+export { AspNetUser, AspNetRole, AspNetUserRole };

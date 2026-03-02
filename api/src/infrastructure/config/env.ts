@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const requiredEnvs = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"] as const;
+const requiredEnvs = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD", "JWT_SECRET"] as const;
 
 for (const envName of requiredEnvs) {
   if (!process.env[envName]) {
@@ -19,5 +19,9 @@ export const env = {
     name: process.env.DB_NAME as string,
     user: process.env.DB_USER as string,
     password: process.env.DB_PASSWORD as string
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET as string,
+    expiresIn: process.env.JWT_EXPIRES_IN ?? "7d"
   }
 };
