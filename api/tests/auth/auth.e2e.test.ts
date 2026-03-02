@@ -11,6 +11,16 @@ import { hashPassword } from "../../src/infrastructure/auth/aspnet-identity-hash
 import { COMPRADOR_ROLE_ID } from "../../src/shared/constants";
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Mock Sequelize database – prevents initModels from running (no live DB needed)
+// ──────────────────────────────────────────────────────────────────────────────
+jest.mock("../../src/infrastructure/database/sequelize", () => ({
+  sequelize: {
+    transaction: jest.fn((cb: (t: unknown) => Promise<unknown>) => cb({}))
+  },
+  connectDatabase: jest.fn()
+}));
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Mock Sequelize models – hoisted to top by Jest before any imports are resolved
 // ──────────────────────────────────────────────────────────────────────────────
 jest.mock(
