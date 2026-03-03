@@ -1,269 +1,284 @@
-﻿/**
- * PÃ¡gina de Detalle del Producto
- */
+import { useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ShoppingBag,
+  ChevronRight,
+  Heart,
+  Star,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Truck,
+  RotateCcw,
+  Shield,
+  Check,
+} from "lucide-react";
+import { apiClient } from "../services/api";
+import type { Category } from "../types/product";
+import { useCart } from "../contexts/CartContext";
+import { CartSheet } from "../components/ui/CartSheet";
 
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { apiClient } from '../services/api';
-import { useAuthContext } from '../contexts/AuthContext';
-import { Navbar } from '../components/Navbar';
-import type { Product } from '../types/product';
-
-export const ProductDetailPage = () => {
+export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuthContext();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<"description" | "specs">("description");
+  const { addToCart } = useCart();
 
-  useEffect(() => {
-    const loadProduct = async () => {
-      try {
-        setIsLoading(true);
-        const data = await apiClient.getProductById(id!);
-        setProduct(data);
-      } catch (err) {
-        setError('No se pudo cargar el producto. Intenta de nuevo.');
-        console.error('Error loading product:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const { data: product, isLoading, isError } = useQuery({
+    queryKey: ["product", id],
+    queryFn: () => apiClient.getProductById(id!),
+    enabled: !!id,
+  });
 
-    if (id) {
-      loadProduct();
-    }
-  }, [id]);
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["categories"],
+    queryFn: () => apiClient.getCategories(),
+  });
 
-  const handleAddToCart = async () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
+  const getCategoryName = (categoryId: number) =>
+    categories.find((c) => c.id === categoryId)?.name ?? "—";
 
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+
+  const handleAddToCart = () => {
     if (!product) return;
-
-    try {
-      setIsAddingToCart(true);
-      await apiClient.addToCart(product.id, quantity);
-      setAddedToCart(true);
-      setTimeout(() => setAddedToCart(false), 3000);
-    } catch (err) {
-      setError('Error al agregar al carrito. Intenta de nuevo.');
-      console.error('Error adding to cart:', err);
-    } finally {
-      setIsAddingToCart(false);
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(price);
-  };
-
-  const inStock = product ? product.stock > 0 : false;
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <Navbar />
-        <div className="flex items-center justify-center py-32">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-slate-900"></div>
-        </div>
-      </div>
+    addToCart(
+      {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      },
+      quantity
     );
-  }
-
-  if (error || !product) {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold text-slate-900 mb-2">{error || 'Producto no encontrado'}</h1>
-            <Link to="/" className="inline-block mt-4 px-6 py-2.5 bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold rounded-full transition-colors">
-              Volver al catÃ¡logo
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 3000);
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
+    <div className="min-h-screen bg-background">
+      {/* Navbar */}
+      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link to="/" className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-accent" />
+              <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
+            </Link>
+            <div className="flex items-center gap-4">
+              <CartSheet />
+              <Link to="/dashboard">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                  U
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
-          <Link to="/" className="hover:text-slate-900 transition-colors">Productos</Link>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <span className="text-slate-900 font-medium line-clamp-1">{product.name}</span>
-        </nav>
+      {/* Loading */}
+      {isLoading && (
+        <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8 md:py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
+            <div className="aspect-square bg-secondary rounded-3xl animate-pulse" />
+            <div className="space-y-4 py-2">
+              <div className="h-4 bg-secondary rounded w-1/3 animate-pulse" />
+              <div className="h-8 bg-secondary rounded w-2/3 animate-pulse" />
+              <div className="h-10 bg-secondary rounded w-1/4 animate-pulse" />
+            </div>
+          </div>
+        </main>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+      {/* Error */}
+      {isError && (
+        <main className="max-w-7xl mx-auto px-6 lg:px-8 py-24 text-center">
+          <p className="text-muted-foreground">No se pudo cargar el producto.</p>
+          <Link to="/" className="mt-4 inline-block text-accent underline text-sm">Volver al catalogo</Link>
+        </main>
+      )}
+
+      {product && (
+        <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8 md:py-12">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-10">
+            <Link to="/" className="hover:text-foreground transition-colors font-medium cursor-pointer">Productos</Link>
+            <ChevronRight className="h-3.5 w-3.5 text-border" />
+            <span className="hover:text-foreground transition-colors font-medium cursor-pointer">{getCategoryName(product.categoryId)}</span>
+            <ChevronRight className="h-3.5 w-3.5 text-border" />
+            <span className="text-foreground font-semibold line-clamp-1">{product.name}</span>
+          </nav>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start">
           {/* Product Image */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center p-6 md:p-10 aspect-square">
-            {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="max-w-full max-h-full object-contain"
+          <div className="group relative bg-secondary rounded-3xl overflow-hidden aspect-square flex items-center justify-center">
+              {product.imageUrl ? (
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              ) : (
+                <ShoppingBag className="h-28 w-28 text-border transition-transform duration-700 group-hover:scale-110" />
+              )}
+            {/* Favorite */}
+            <button
+              onClick={() => setIsFavorite(!isFavorite)}
+              className="absolute top-5 right-5 w-12 h-12 bg-card/80 backdrop-blur rounded-full flex items-center justify-center border border-border hover:bg-card transition-all"
+              aria-label="Agregar a favoritos"
+            >
+              <Heart
+                className={`h-5 w-5 transition-colors ${
+                  isFavorite ? "fill-accent text-accent" : "text-muted-foreground"
+                }`}
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-slate-100 to-slate-200 rounded-xl">
-                <svg className="w-24 h-24 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            )}
+            </button>
           </div>
 
           {/* Product Details */}
-          <div className="flex flex-col">
-            <div className="flex-1">
-              {/* Category badge */}
-              <span className="inline-block text-xs font-semibold tracking-widest uppercase text-slate-400 mb-2">
-                Producto #{product.id}
+          <div className="flex flex-col py-2">
+            {/* Badge row */}
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-xs font-semibold tracking-[0.15em] uppercase text-muted-foreground">
+                {getCategoryName(product.categoryId)}
               </span>
-
-              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-4 leading-tight">
-                {product.name}
-              </h1>
-
-              {/* Price */}
-              <div className="mb-6 flex items-center gap-3">
-                <span className="text-3xl font-extrabold text-slate-900">
-                  {formatPrice(product.price)}
-                </span>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                  inStock ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-                }`}>
-                  {inStock ? `En stock Â· ${product.stock} disponibles` : 'Agotado'}
-                </span>
-              </div>
-
-              {/* Description */}
-              <div className="mb-6">
-                <p className="text-slate-600 leading-relaxed">{product.description}</p>
-              </div>
-
-              {/* Specs */}
-              <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 mb-6">
-                <dl className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <dt className="text-slate-500">CÃ³digo</dt>
-                    <dd className="font-medium text-slate-900">#{product.id}</dd>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <dt className="text-slate-500">Estado</dt>
-                    <dd className="font-medium text-slate-900">{product.isActive ? 'Activo' : 'Inactivo'}</dd>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <dt className="text-slate-500">Agregado</dt>
-                    <dd className="font-medium text-slate-900">{new Date(product.createdAt).toLocaleDateString('es-ES')}</dd>
-                  </div>
-                </dl>
-              </div>
+              <span className="w-1 h-1 rounded-full bg-border" />
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-accent">
+                <Star className="h-3 w-3 fill-accent" />
+                {product.stock > 0 ? `${product.stock} disponibles` : "Agotado"}
+              </span>
             </div>
 
-            {/* Cart success */}
+            <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-6 leading-tight tracking-tight text-balance">
+              {product.name}
+            </h1>
+
+            {/* Price row */}
+            <div className="flex items-baseline gap-4 mb-8">
+              <span className="text-4xl font-bold text-foreground tracking-tight">
+                {formatPrice(product.price)}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-accent/10 text-accent">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block" />
+                {product.stock} disponibles
+              </span>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-border mb-8" />
+
+            {/* Tabs */}
+            <div className="flex items-center gap-6 mb-6">
+              <button
+                onClick={() => setSelectedTab("description")}
+                className={`text-sm font-medium pb-2 border-b-2 transition-colors ${
+                  selectedTab === "description"
+                    ? "border-accent text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Descripcion
+              </button>
+              <button
+                onClick={() => setSelectedTab("specs")}
+                className={`text-sm font-medium pb-2 border-b-2 transition-colors ${
+                  selectedTab === "specs"
+                    ? "border-accent text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Especificaciones
+              </button>
+            </div>
+
+            {selectedTab === "description" ? (
+              <p className="text-muted-foreground leading-relaxed text-sm md:text-base mb-8">
+                {product.description}
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {[
+                  { label: "Codigo", value: `#${product.id}` },
+                  { label: "Stock", value: String(product.stock) },
+                  { label: "Anadido", value: new Date(product.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" }) },
+                  { label: "Estado", value: product.isActive ? "Activo" : "Inactivo" },
+                ].map((spec) => (
+                  <div key={spec.label} className="bg-secondary rounded-xl p-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{spec.label}</p>
+                    <p className="font-bold text-foreground text-sm">{spec.value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Perks */}
+            <div className="flex flex-col gap-3 mb-8">
+              {[
+                { icon: Truck, text: "Envio gratuito a partir de 50 EUR" },
+                { icon: RotateCcw, text: "Devolucion gratuita en 30 dias" },
+                { icon: Shield, text: "Garantia de autenticidad" },
+              ].map((perk) => (
+                <div key={perk.text} className="flex items-center gap-3">
+                  <perk.icon className="h-4 w-4 text-accent shrink-0" />
+                  <span className="text-sm text-muted-foreground">{perk.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Cart success toast */}
             {addedToCart && (
-              <div className="mb-4 flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <p className="text-emerald-700 text-sm font-medium">AÃ±adido al carrito</p>
+              <div className="mb-5 flex items-center gap-3 p-4 bg-accent/10 border border-accent/20 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center shrink-0">
+                  <Check className="h-4 w-4 text-accent" />
+                </div>
+                <div>
+                  <p className="text-foreground text-sm font-semibold">Anadido al carrito</p>
+                  <p className="text-muted-foreground text-xs">Tu carrito ha sido actualizado</p>
+                </div>
               </div>
             )}
 
             {/* Add to cart section */}
-            <div className="border-t border-slate-200 pt-6">
-              {inStock ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                      Cantidad
-                    </label>
-                    <div className="inline-flex items-center border border-slate-200 rounded-xl overflow-hidden">
-                      <button
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition text-lg leading-none"
-                      >
-                        âˆ’
-                      </button>
-                      <input
-                        type="number"
-                        value={quantity}
-                        onChange={(e) => setQuantity(Math.min(product.stock, Math.max(1, parseInt(e.target.value) || 1)))}
-                        className="w-16 py-2.5 text-center text-sm font-semibold text-slate-900 border-x border-slate-200 focus:outline-none"
-                        min="1"
-                        max={product.stock}
-                      />
-                      <button
-                        onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                        className="px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition text-lg leading-none"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
+            <div className="flex items-center gap-4">
+              {/* Quantity */}
+              <div className="flex items-center bg-secondary rounded-xl overflow-hidden border border-border">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-12 h-12 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Reducir cantidad"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-12 h-12 flex items-center justify-center text-sm font-bold text-foreground">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  className="w-12 h-12 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  aria-label="Aumentar cantidad"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
 
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={isAddingToCart}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-700 disabled:bg-slate-400 text-white font-semibold rounded-xl transition-colors text-sm"
-                  >
-                    {isAddingToCart ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
-                        AÃ±adiendoâ€¦
-                      </>
-                    ) : (
-                      <>
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        {isAuthenticated ? 'AÃ±adir al carrito' : 'Inicia sesiÃ³n para comprar'}
-                      </>
-                    )}
-                  </button>
-
-                  {!isAuthenticated && (
-                    <p className="text-xs text-slate-500 text-center">
-                      <Link to="/login" className="font-semibold text-slate-900 hover:underline">Inicia sesiÃ³n</Link>{' '}
-                      para aÃ±adir al carrito
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-base font-semibold text-red-600 mb-4">Producto no disponible</p>
-                  <Link to="/" className="inline-block px-6 py-2.5 bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold rounded-full transition-colors">
-                    Seguir comprando
-                  </Link>
-                </div>
-              )}
+              {/* Add to cart button */}
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 flex items-center justify-center gap-2.5 px-6 py-4 bg-primary hover:bg-primary/90 active:scale-[0.98] text-primary-foreground font-semibold rounded-xl transition-all duration-150 text-sm"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Anadir al carrito
+              </button>
             </div>
           </div>
         </div>
       </main>
+      )}
     </div>
   );
-};
+}

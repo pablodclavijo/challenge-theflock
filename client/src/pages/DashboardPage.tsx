@@ -1,132 +1,264 @@
-/**
- * Componente Página Dashboard
- * Dashboard principal del usuario después de iniciar sesión
- */
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import {
+  ShoppingBag,
+  ShoppingCart,
+  Heart,
+  MapPin,
+  ChevronRight,
+  Package,
+  CreditCard,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import { apiClient } from "../services/api";
+import { useAuthContext } from "../contexts/AuthContext";
 
-import { useAuthContext } from '../contexts/AuthContext';
-import { useProtectedRoute } from '../hooks/useProtectedRoute';
-import { Navbar } from '../components/Navbar';
+export function DashboardPage() {
+  const { user, logout } = useAuthContext();
 
-export const DashboardPage = () => {
-  const { user, isLoading } = useAuthContext();
-  useProtectedRoute();
+  const { data: ordersResponse, isLoading: loadingOrders } = useQuery({
+    queryKey: ["orders"],
+    queryFn: () => apiClient.getOrders({ limit: 5 }),
+  });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-slate-900"></div>
-      </div>
-    );
-  }
+  const { data: cartData } = useQuery({
+    queryKey: ["cart"],
+    queryFn: () => apiClient.getCart(),
+  });
 
+  const orders = ordersResponse?.data ?? ordersResponse ?? [];
+  const cartCount = cartData?.items?.length ?? cartData?.length ?? 0;
 
+  const totalSpent = orders
+    .filter((o: any) => o.status === "paid" || o.status === "delivered" || o.status === "Entregado")
+    .reduce((sum: number, o: any) => sum + (o.total ?? o.totalAmount ?? 0), 0);
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+
+  const statusLabel = (status: string) => {
+    const map: Record<string, string> = {
+      paid: "Pagado",
+      pending: "Pendiente",
+      delivered: "Entregado",
+      cancelled: "Cancelado",
+      shipped: "En camino",
+    };
+    return map[status] ?? status;
+  };
+
+  const isDelivered = (status: string) =>
+    status === "delivered" || status === "paid" || status === "Entregado";
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-16">
-        {/* Page header */}
-        <div className="mb-10">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">
-            Hola, {user?.fullName?.split(' ')[0]} 👋
-          </h1>
-          <p className="text-slate-500 text-sm mt-2">Bienvenido a tu panel de cuenta.</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Profile card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-7">
-            <div className="flex items-center gap-5 mb-7">
-              <div className="w-14 h-14 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold text-xl shrink-0">
-                {user?.fullName?.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-slate-900">{user?.fullName}</h2>
-                <p className="text-sm text-slate-500">{user?.email}</p>
+    <div className="min-h-screen bg-background">
+      {/* Navbar */}
+      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-accent" />
+              <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
+            </div>
+            <nav className="hidden md:flex items-center gap-8">
+              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Productos</span>
+              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Colecciones</span>
+            </nav>
+            <div className="flex items-center gap-4">
+              <span className="relative cursor-pointer">
+                <ShoppingCart className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-accent text-accent-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </span>
+              <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground text-xs font-bold">
+                {user?.fullName?.charAt(0) ?? "U"}
               </div>
             </div>
+          </div>
+        </div>
+      </header>
 
-            <div className="space-y-5 pt-5 border-t border-slate-100">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Correo</span>
-                <span className="text-sm text-slate-700 font-medium">{user?.email}</span>
+      <main className="max-w-7xl mx-auto px-6 lg:px-8 py-10 md:py-16">
+        {/* Page header */}
+        <div className="mb-12">
+          <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent mb-3 block">Mi cuenta</span>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+            Hola, {user?.fullName?.split(" ")[0] ?? ""}
+          </h1>
+          <p className="text-muted-foreground text-sm mt-2">Bienvenido a tu panel de cuenta.</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left column: Profile + Quick Actions */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Profile card */}
+            <div className="bg-card rounded-2xl border border-border p-7 shadow-sm">
+              <div className="flex flex-col items-center text-center mb-7">
+                <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center text-accent font-serif font-bold text-2xl mb-4">
+                  {user?.fullName?.charAt(0) ?? "U"}
+                </div>
+                <h2 className="text-base font-bold text-foreground">{user?.fullName}</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nombre</span>
-                <span className="text-sm text-slate-700 font-medium">{user?.fullName}</span>
+
+              <div className="space-y-4 pt-5 border-t border-border">
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Direccion</p>
+                    <p className="text-sm text-foreground">{user?.shippingAddress ?? "Sin dirección guardada"}</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">Dirección</span>
-                <span className="text-sm text-slate-700 font-medium text-right ml-4">
-                  {user?.shippingAddress || <span className="text-slate-400 font-normal italic">No configurada</span>}
+
+              <button className="mt-7 w-full py-3 px-4 border border-border text-foreground text-sm font-semibold rounded-xl hover:bg-secondary transition flex items-center justify-center gap-2">
+                <Settings className="h-4 w-4" />
+                Editar Perfil
+              </button>
+            </div>
+
+            {/* Quick actions */}
+            <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+              <Link
+                to="/"
+                className="w-full flex items-center gap-4 p-5 hover:bg-secondary transition group text-left border-b border-border"
+              >
+                <div className="w-10 h-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center shrink-0">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground text-sm">Explorar productos</p>
+                  <p className="text-xs text-muted-foreground">Navega nuestro catalogo</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
+              </Link>
+              <button className="w-full flex items-center gap-4 p-5 hover:bg-secondary transition group text-left border-b border-border">
+                <div className="w-10 h-10 bg-accent text-accent-foreground rounded-xl flex items-center justify-center shrink-0">
+                  <ShoppingCart className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground text-sm">Ver carrito</p>
+                  <p className="text-xs text-muted-foreground">Revisa tus productos</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
+              </button>
+              <button className="w-full flex items-center gap-4 p-5 hover:bg-secondary transition group text-left border-b border-border">
+                <div className="w-10 h-10 bg-secondary text-foreground rounded-xl flex items-center justify-center shrink-0">
+                  <Heart className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground text-sm">Lista de deseos</p>
+                  <p className="text-xs text-muted-foreground">Tus productos favoritos</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
+              </button>
+              <button
+                onClick={logout}
+                className="w-full flex items-center gap-4 p-5 hover:bg-destructive/5 transition group text-left"
+              >
+                <div className="w-10 h-10 bg-destructive/10 text-destructive rounded-xl flex items-center justify-center shrink-0">
+                  <LogOut className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-destructive text-sm">Cerrar sesion</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Right column: Orders + Stats */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "Pedidos", value: String(orders.length), icon: Package },
+                { label: "Gastado", value: formatPrice(totalSpent), icon: CreditCard },
+                { label: "En carrito", value: String(cartCount), icon: ShoppingCart },
+                { label: "Favoritos", value: "0", icon: Heart },
+              ].map((stat) => (
+                <div key={stat.label} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <stat.icon className="h-5 w-5 text-accent" />
+                  </div>
+                  <p className="text-2xl font-bold text-foreground tracking-tight">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1 font-medium">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Recent orders */}
+            <div className="bg-card rounded-2xl border border-border shadow-sm">
+              <div className="flex items-center justify-between p-6 pb-0">
+                <h2 className="font-serif text-lg font-bold text-foreground">Pedidos recientes</h2>
+                <span className="text-sm text-accent font-medium hover:underline cursor-pointer flex items-center gap-1">
+                  Ver todos
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </span>
               </div>
+              <div className="p-6 pt-4">
+                {loadingOrders ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-16 bg-secondary rounded-xl animate-pulse" />
+                    ))}
+                  </div>
+                ) : orders.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">No tienes pedidos aun.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {orders.map((order: any) => (
+                      <div
+                        key={order.id}
+                        className="flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/50 transition-colors cursor-pointer group"
+                      >
+                        <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center shrink-0">
+                          <Package className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-foreground text-sm">#{order.id}</p>
+                            <span
+                              className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                isDelivered(order.status)
+                                  ? "bg-accent/10 text-accent"
+                                  : "bg-secondary text-muted-foreground"
+                              }`}
+                            >
+                              {statusLabel(order.status)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {order.createdAt ? formatDate(order.createdAt) : ""}
+                            {order.items?.length ? ` · ${order.items.length} artículo${order.items.length !== 1 ? "s" : ""}` : ""}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-bold text-foreground text-sm">
+                            {formatPrice(order.total ?? order.totalAmount ?? 0)}
+                          </p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <button className="mt-7 w-full py-3 px-4 border border-slate-300 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition">
-              Editar Perfil
-            </button>
-          </div>
-
-          {/* Quick actions */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-7">
-            <h2 className="text-base font-bold text-slate-900 mb-5">Acciones rápidas</h2>
-            <div className="space-y-3">
-              <a
-                href="/"
-                className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
-              >
-                <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">Explorar productos</p>
-                  <p className="text-xs text-slate-500">Navega nuestro catálogo</p>
-                </div>
-                <svg className="w-4 h-4 text-slate-400 ml-auto group-hover:text-slate-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
-              <button className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group text-left">
-                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">Ver carrito</p>
-                  <p className="text-xs text-slate-500">Revisa tus productos</p>
-                </div>
-                <svg className="w-4 h-4 text-slate-400 ml-auto group-hover:text-slate-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              <button className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group text-left">
-                <div className="w-10 h-10 bg-violet-500 rounded-xl flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">Mis pedidos</p>
-                  <p className="text-xs text-slate-500">Historial de compras</p>
-                </div>
-                <svg className="w-4 h-4 text-slate-400 ml-auto group-hover:text-slate-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+            {/* CTA banner */}
+            <div className="bg-primary rounded-2xl p-10 text-center text-primary-foreground">
+              <p className="font-serif text-lg font-bold mb-2">Mas funciones proximamente</p>
+              <p className="text-primary-foreground/50 text-sm">Gestion de pedidos, lista de deseos y mucho mas.</p>
             </div>
           </div>
-        </div>
-
-        {/* Coming soon banner */}
-        <div className="mt-8 bg-linear-to-r from-slate-900 to-slate-700 rounded-2xl p-10 text-center text-white">
-          <p className="text-base font-semibold mb-1">Más funciones próximamente</p>
-          <p className="text-slate-400 text-sm">Gestión de pedidos, lista de deseos y mucho más.</p>
         </div>
       </main>
     </div>
   );
-};
+}

@@ -1,143 +1,152 @@
-/**
- * Componente Página de Inicio de Sesión
- * Maneja el inicio de sesión con correo/contraseña
- */
+"use client";
 
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuthContext } from '../contexts/AuthContext';
-import { useForm } from 'react-hook-form';
+import { useState } from "react";
+import { ShoppingBag, ArrowRight, Eye, EyeOff, ShoppingCart } from "lucide-react";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useAuthContext } from "../contexts/AuthContext";
 
-interface LoginFormInputs {
-  email: string;
-  password: string;
-}
+export function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-export const LoginPage = () => {
+  const { login } = useAuthContext();
   const navigate = useNavigate();
-  const { login, isLoading } = useAuthContext();
-  const [error, setError] = useState<string>('');
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>({
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
+  const [searchParams] = useSearchParams();
+  const fromCart = searchParams.get("from") === "cart";
 
-  const onSubmit = async (data: LoginFormInputs) => {
-    setError('');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
     try {
-      await login(data.email, data.password);
-      navigate('/dashboard');
+      await login(email, password);
+      // Redirect back to cart view (product list) so user can proceed to checkout
+      navigate(fromCart ? "/" : "/dashboard", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(typeof err === "string" ? err : "Credenciales incorrectas. Inténtalo de nuevo.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Top bar */}
-      <div className="bg-white border-b border-slate-200 px-4 py-4 flex items-center justify-between">
-        <a href="/" className="flex items-center gap-2 text-slate-900 font-bold text-lg">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-          </svg>
-          ShopNow
-        </a>
-        <span className="text-sm text-slate-500">
-          ¿Sin cuenta?{' '}
-          <a href="/register" className="font-semibold text-slate-900 hover:underline">Regístrate</a>
-        </span>
-      </div>
+      <header className="bg-card border-b border-border px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-between h-16">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="h-5 w-5 text-accent" />
+            <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
+          </div>
+          <span className="text-sm text-muted-foreground">
+            {"No tienes cuenta? "}
+            <Link to="/register" className="font-semibold text-foreground hover:text-accent transition-colors">
+              Registrate
+            </Link>
+          </span>
+        </div>
+      </header>
 
       {/* Main */}
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
+      <div className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-md">
-          <div className="text-center mb-10">
-            <h1 className="text-3xl font-extrabold text-slate-900 mb-3">Bienvenido de nuevo</h1>
-            <p className="text-slate-500 text-sm">Ingresa a tu cuenta para continuar</p>
+          <div className="text-center mb-12">
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
+              {fromCart ? (
+                <ShoppingCart className="h-7 w-7 text-accent" />
+              ) : (
+                <ShoppingBag className="h-7 w-7 text-accent" />
+              )}
+            </div>
+            <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
+              {fromCart ? "Un paso más" : "Bienvenido de nuevo"}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {fromCart
+                ? "Inicia sesión para finalizar tu compra. Tu carrito está guardado."
+                : "Ingresa a tu cuenta para continuar comprando"}
+            </p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-8">
+          <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
             {/* Error alert */}
             {error && (
-              <div className="mb-6 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-red-700 text-sm">{error}</p>
+              <div className="mb-6 flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-xl">
+                <p className="text-destructive text-sm">{error}</p>
               </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                  Correo electrónico
+                <label htmlFor="login-email" className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
+                  Correo electronico
                 </label>
                 <input
-                  id="email"
+                  id="login-email"
                   type="email"
-                  placeholder="you@example.com"
-                  {...register('email', {
-                    required: 'El correo electrónico es requerido',
-                    pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: 'Ingresa un correo electrónico válido',
-                    },
-                  })}
-                  className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent focus:bg-white transition ${
-                    errors.email ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                  }`}
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-secondary border border-border rounded-xl text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent focus:bg-card transition-all"
                 />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1.5">{errors.email.message}</p>
-                )}
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                  Contraseña
+                <label htmlFor="login-password" className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
+                  Contrasena
                 </label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  {...register('password', {
-                    required: 'La contraseña es requerida',
-                    minLength: {
-                      value: 6,
-                      message: 'Mínimo 6 caracteres',
-                    },
-                  })}
-                  className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent focus:bg-white transition ${
-                    errors.password ? 'border-red-400 bg-red-50' : 'border-slate-200'
-                  }`}
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>
-                )}
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3.5 pr-12 bg-secondary border border-border rounded-xl text-sm text-foreground placeholder-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent focus:bg-card transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end">
+                <span className="text-xs text-accent font-medium hover:underline cursor-pointer">
+                  Olvidaste tu contrasena?
+                </span>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-slate-900 hover:bg-slate-700 disabled:bg-slate-400 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm mt-2"
+                className="w-full flex items-center justify-center gap-2.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground font-semibold py-3.5 px-4 rounded-xl transition-all text-sm"
               >
                 {isLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></span>
-                    Iniciando sesión…
+                  <span className="flex items-center gap-2">
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground"></span>
+                    Iniciando sesion...
                   </span>
                 ) : (
-                  'Iniciar Sesión'
+                  <>
+                    Iniciar Sesion
+                    <ArrowRight className="h-4 w-4" />
+                  </>
                 )}
               </button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-              <p className="text-sm text-slate-500">
-                ¿Nuevo usuario?{' '}
-                <Link to="/register" className="font-semibold text-slate-900 hover:underline">
+            <div className="mt-8 pt-6 border-t border-border text-center">
+              <p className="text-sm text-muted-foreground">
+                {"Nuevo usuario? "}
+                <Link to="/register" className="font-semibold text-foreground hover:text-accent transition-colors">
                   Crear una cuenta
                 </Link>
               </p>
@@ -147,4 +156,4 @@ export const LoginPage = () => {
       </div>
     </div>
   );
-};
+}

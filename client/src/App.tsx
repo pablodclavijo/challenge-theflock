@@ -16,7 +16,7 @@ function App() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <ProductListPage />} />
+      <Route path="/" element={<ProductListPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
