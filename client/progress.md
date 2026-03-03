@@ -12,9 +12,9 @@ Cliente React para tienda en línea. La API (Node.js) y Panel de Administrador (
 - [x] Autenticación: Página de perfil de usuario
 
 ### Catálogo de Productos (3 tareas)
-- [ ] Productos: Lista con paginación
-- [ ] Productos: Filtros y búsqueda
-- [ ] Productos: Página de detalle
+- [x] Productos: Lista con paginación
+- [x] Productos: Filtros y búsqueda
+- [x] Productos: Página de detalle
 
 ### Carrito de Compras (2 tareas)
 - [ ] Carrito: Agregar/Eliminar/Actualizar artículos
@@ -38,6 +38,12 @@ Cliente React para tienda en línea. La API (Node.js) y Panel de Administrador (
 - Página de registro
 - Página de inicio (Landing Page)
 - Diseño responsive con Tailwind CSS
+- Catálogo de productos con lista paginada
+- Infinite scroll en la lista de productos
+- Filtros de búsqueda y categoría
+- Filtros de rango de precios
+- Página de detalle de producto
+- Agregar productos al carrito desde la página de detalle
 
 ---
 

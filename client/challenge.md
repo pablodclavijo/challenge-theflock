@@ -1,10 +1,10 @@
-TECHNICAL CHALLENGE
+DESAFÍO TÉCNICO
 
-E-Commerce
+Comercio Electrónico
 Tienda Online
-Full-Stack Development Challenge
+Desafío de Desarrollo Full-Stack
 
-Storefront: React · Node.js API
+Escaparate: React · API Node.js
 Panel Admin: .NET MVC · Razor Views
 
 The Flock
@@ -13,9 +13,9 @@ Managed Software Teams
 Tiempo estimado: 48–72 hs
 Entrega: Repositorio GitHub
 
-The Flock — Technical Challenge: E-Commerce
+The Flock — Desafío Técnico: Comercio Electrónico
 
-1. Overview
+1. Descripción General
 Este challenge evalúa tu capacidad para desarrollar un sistema de e-commerce completo utilizando
 dos stacks tecnológicos que comparten la misma base de datos. El sistema tiene dos interfaces
 diferenciadas con propósitos distintos, lo que permite evaluar tu dominio de cada stack en un
@@ -29,12 +29,12 @@ estas herramientas de manera efectiva para producir software de calidad profesio
 El sistema se compone de dos aplicaciones independientes que operan sobre la misma base de
 datos:
 
-Storefront Público Base de Datos Panel Vendedor/Admin
-React (SPA) .NET MVC (Razor Views)
+Escaparate Público Base de Datos Panel Vendedor/Admin
+React (SPA) .NET MVC (Razorviews)
 ↓ PostgreSQL / SQLite ↑
-Node.js API (schema compartido) .NET MVC Controllers
+API Node.js (schema compartido) Controladores .NET MVC
 
-2.1 Storefront Público (React + Node.js)
+2.1 Escaparate Público (React + Node.js)
 SPA construida en React que consume una API REST en Node.js. Es la interfaz que usan los
 compradores para navegar el catálogo, armar su carrito y realizar compras.
 2.2 Panel Vendedor/Admin (.NET MVC)

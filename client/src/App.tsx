@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthContext } from './contexts/AuthContext';
-import { LoginPage, RegisterPage, DashboardPage, HomePage } from './pages';
+import { LoginPage, RegisterPage, DashboardPage, ProductListPage, ProductDetailPage } from './pages';
 
 function App() {
   const { isAuthenticated, isLoading } = useAuthContext();
@@ -16,7 +16,8 @@ function App() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <HomePage />} />
+      <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <ProductListPage />} />
+      <Route path="/products/:id" element={<ProductDetailPage />} />
       <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
 
