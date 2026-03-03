@@ -20,6 +20,7 @@ import { useAuthContext } from "../contexts/AuthContext";
 import { apiClient } from "../services/api";
 import { TAX_RATE } from "../lib/constants";
 import type { Order, PaymentResult } from "../types/order";
+import { isPaymentApproved } from "../types/order";
 
 type Step = "address" | "review" | "processing" | "confirmed" | "failed";
 
@@ -116,7 +117,7 @@ export function CheckoutPage() {
       setPayment(paymentResult);
 
       // 3. Clear server-side cart on success
-      if (paymentResult.status === "Pagado") {
+      if (isPaymentApproved(paymentResult)) {
         await clearCart();
         setStep("confirmed");
       } else {

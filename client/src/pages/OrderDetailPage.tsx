@@ -16,6 +16,7 @@ import {
 import { apiClient } from "../services/api";
 import { useAuthContext } from "../contexts/AuthContext";
 import type { Order, PaymentResult } from "../types/order";
+import { isPaymentApproved, normalizeOrderStatus } from "../types/order";
 import { StatusBadge } from "./OrdersPage";
 
 const formatPrice = (price: number) =>
@@ -107,7 +108,8 @@ export function OrderDetailPage() {
     );
   }
 
-  const canRetryPayment = order.status === "Pendiente" || order.status === "PagoFallido";
+  const normalizedStatus = normalizeOrderStatus(order.status);
+  const canRetryPayment = normalizedStatus === "Pendiente" || normalizedStatus === "PagoFallido";
 
   return (
     <div className="min-h-screen bg-background">
@@ -139,7 +141,7 @@ export function OrderDetailPage() {
         {/* Payment result toast */}
         {paymentResult && (
           <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm font-medium
-            ${paymentResult.status === "Pagado"
+          {isPaymentApproved(paymentResult)
               ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300"
               : "bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-700 dark:text-red-300"
             }`}>

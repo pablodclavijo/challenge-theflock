@@ -49,7 +49,10 @@ export class ApiClient {
         if (error.response?.status === 401 && !isAuthEndpoint) {
           // Token expirado o inválido — solo redirigir desde rutas protegidas
           tokenUtils.clearAuth();
-          window.location.href = '/login';
+          // Avoid redirect loop: only navigate if not already on /login
+          if (!window.location.pathname.startsWith('/login')) {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(error);
       }

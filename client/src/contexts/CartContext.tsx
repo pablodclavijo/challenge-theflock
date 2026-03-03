@@ -14,7 +14,9 @@ import {
   type ReactNode,
 } from "react";
 import { apiClient } from "../services/api";
+import { tokenUtils } from "../utils/auth";
 import { TAX_RATE } from "../lib/constants";
+import { useAuthContext } from "./AuthContext";
 
 export interface CartItem {
   productId: number;
@@ -47,6 +49,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuthContext();
 
   // Parse API response into items array
   const parseCartResponse = (cartData: any): any[] => {
@@ -116,8 +119,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return normalized;
   };
 
-  // Load cart from server on mount
+  // Reload cart whenever auth state changes
   useEffect(() => {
+    if (!isAuthenticated || !tokenUtils.getToken()) {
+      setItems([]);
+      setIsLoading(false);
+      return;
+    }
+
     const loadCart = async () => {
       try {
         setIsLoading(true);
@@ -125,8 +134,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
         console.log("Cart data from API:", cartData);
         
         const itemsArray = parseCartResponse(cartData);
-        const items = await normalizeCartItems(itemsArray);
-        setItems(items);
+        const normalized = await normalizeCartItems(itemsArray);
+        setItems(normalized);
+
+        // Process any item the user tried to add before logging in
+        const raw = sessionStorage.getItem('pendingCartItem');
+        if (raw) {
+          sessionStorage.removeItem('pendingCartItem');
+          try {
+            const pending = JSON.parse(raw) as {
+              productId: number;
+              name: string;
+              price: number;
+              imageUrl?: string;
+              quantity: number;
+            };
+            await apiClient.addToCart(pending.productId, pending.quantity);
+            const updated = await apiClient.getCart();
+            const updatedItems = await normalizeCartItems(parseCartResponse(updated));
+            setItems(updatedItems);
+          } catch (pendingErr) {
+            console.error('Failed to add pending cart item:', pendingErr);
+          }
+        }
       } catch (err) {
         console.error("Failed to load cart:", err);
         // Fail silently if not authenticated
@@ -137,7 +167,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     loadCart();
-  }, []);
+  }, [isAuthenticated]);
 
   const addToCart = useCallback(
     async (product: Omit<CartItem, "quantity">, qty: number) => {
@@ -186,16 +216,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [removeFromCart]);
 
   const clearCart = useCallback(async () => {
-    try {
-      // Remove all items from cart
-      const itemsToRemove = [...items];
-      for (const item of itemsToRemove) {
+    // Always clear local state first — the backend already empties the cart
+    // when an order is created, so DELETE /cart/:id calls may return 404.
+    setItems([]);
+    const itemsToRemove = [...items];
+    for (const item of itemsToRemove) {
+      try {
         await apiClient.removeFromCart(item.productId);
+      } catch (err: any) {
+        // 404 means the backend already removed the item — that's fine.
+        if (err?.response?.status !== 404) {
+          console.error("Failed to remove cart item:", item.productId, err);
+        }
       }
-      setItems([]);
-    } catch (err) {
-      console.error("Failed to clear cart:", err);
-      throw err;
     }
   }, [items]);
 

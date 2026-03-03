@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ShoppingBag,
@@ -17,6 +17,7 @@ import {
 import { apiClient } from "../services/api";
 import type { Category } from "../types/product";
 import { useCart } from "../contexts/CartContext";
+import { useAuthContext } from "../contexts/AuthContext";
 import { CartSheet } from "../components/ui/CartSheet";
 
 export function ProductDetailPage() {
@@ -26,6 +27,8 @@ export function ProductDetailPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedTab, setSelectedTab] = useState<"description" | "specs">("description");
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuthContext();
+  const navigate = useNavigate();
 
   const { data: product, isLoading, isError } = useQuery({
     queryKey: ["product", id],
@@ -46,6 +49,23 @@ export function ProductDetailPage() {
 
   const handleAddToCart = async () => {
     if (!product) return;
+
+    if (!isAuthenticated) {
+      // Save intended item so CartContext can add it after login
+      sessionStorage.setItem(
+        'pendingCartItem',
+        JSON.stringify({
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          imageUrl: product.imageUrl,
+          quantity,
+        })
+      );
+      navigate('/login?from=cart');
+      return;
+    }
+
     try {
       await addToCart(
         {

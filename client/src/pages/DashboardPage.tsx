@@ -161,16 +161,6 @@ export function DashboardPage() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
               </Link>
-              <button className="w-full flex items-center gap-4 p-5 hover:bg-secondary transition group text-left border-b border-border">
-                <div className="w-10 h-10 bg-secondary text-foreground rounded-xl flex items-center justify-center shrink-0">
-                  <Heart className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-foreground text-sm">Lista de deseos</p>
-                  <p className="text-xs text-muted-foreground">Tus productos favoritos</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
-              </button>
               <button
                 onClick={logout}
                 className="w-full flex items-center gap-4 p-5 hover:bg-destructive/5 transition group text-left"

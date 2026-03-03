@@ -21,6 +21,7 @@ import {
 import { apiClient } from "../services/api";
 import { useAuthContext } from "../contexts/AuthContext";
 import type { Order, OrderStatus, OrderListResponse } from "../types/order";
+import { normalizeOrderStatus } from "../types/order";
 
 /* ─── Status helpers ─── */
 
@@ -71,12 +72,13 @@ function getStatusMeta(status: OrderStatus): StatusMeta {
   }
 }
 
-export function StatusBadge({ status }: { status: OrderStatus }) {
-  const meta = getStatusMeta(status);
+export function StatusBadge({ status }: { status: OrderStatus | number | string }) {
+  const normalized = normalizeOrderStatus(status as OrderStatus | number);
+  const meta = getStatusMeta(normalized);
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${meta?.className}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${meta?.className ?? 'bg-secondary text-muted-foreground'}`}>
       {meta?.icon}
-      {meta?.label}
+      {meta?.label ?? String(status)}
     </span>
   );
 }

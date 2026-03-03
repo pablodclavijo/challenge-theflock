@@ -25,7 +25,6 @@ export function ProductListPage() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [favorites, setFavorites] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [addedToCart, setAddedToCart] = useState<Record<number, boolean>>({});
   const { addToCart } = useCart();
@@ -68,11 +67,6 @@ export function ProductListPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toggleFavorite = (id: number) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    );
-  };
 
   const getCategoryName = (categoryId: number) =>
     categories.find((c) => c.id === categoryId)?.name ?? "—";
@@ -296,21 +290,6 @@ export function ProductListPage() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-500" />
-                  {/* Favorite button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleFavorite(product.id);
-                    }}
-                    className="absolute top-4 right-4 w-10 h-10 bg-card/80 backdrop-blur rounded-full flex items-center justify-center border border-border hover:bg-card transition-all opacity-0 group-hover:opacity-100"
-                    aria-label="Agregar a favoritos"
-                  >
-                    <Heart
-                      className={`h-4 w-4 transition-colors ${
-                        favorites.includes(product.id) ? "fill-accent text-accent" : "text-muted-foreground"
-                      }`}
-                    />
-                  </button>
                   {/* Out of stock badge */}
                   {product.stock === 0 && (
                     <div className="absolute top-4 left-4 bg-foreground text-background text-xs font-bold px-3 py-1.5 rounded-full">
