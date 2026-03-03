@@ -12,6 +12,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import { TAX_RATE } from "../lib/constants";
 
 const STORAGE_KEY = "shopnow_cart";
 
@@ -26,6 +27,13 @@ export interface CartItem {
 interface CartContextType {
   items: CartItem[];
   totalItems: number;
+  /** Sum of (price × qty) before taxes. */
+  subtotal: number;
+  /** Taxes = subtotal × TAX_RATE. */
+  taxes: number;
+  /** Grand total = subtotal + taxes. */
+  total: number;
+  /** @deprecated Use subtotal instead. */
   totalPrice: number;
   addToCart: (item: Omit<CartItem, "quantity">, qty: number) => void;
   removeFromCart: (productId: number) => void;
@@ -109,17 +117,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items]
   );
 
+  const subtotal = totalPrice;
+  const taxes = useMemo(() => subtotal * TAX_RATE, [subtotal]);
+  const total = useMemo(() => subtotal + taxes, [subtotal, taxes]);
+
   const value = useMemo(
     () => ({
       items,
       totalItems,
+      subtotal,
+      taxes,
+      total,
       totalPrice,
       addToCart,
       removeFromCart,
       updateQuantity,
       clearCart,
     }),
-    [items, totalItems, totalPrice, addToCart, removeFromCart, updateQuantity, clearCart]
+    [items, totalItems, subtotal, taxes, total, totalPrice, addToCart, removeFromCart, updateQuantity, clearCart]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

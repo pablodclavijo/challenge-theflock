@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ShoppingCart, Trash2, Minus, Plus, LogIn } from "lucide-react";
 import { useCart } from "../../contexts/CartContext";
+import { TAX_RATE } from "../../lib/constants";
 import { useAuthContext } from "../../contexts/AuthContext";
 import {
   Sheet,
@@ -18,7 +19,7 @@ import {
 } from "./sheet";
 
 export function CartSheet() {
-  const { items, totalItems, totalPrice, removeFromCart, updateQuantity } = useCart();
+  const { items, totalItems, subtotal, taxes, total, removeFromCart, updateQuantity } = useCart();
   const { isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -152,11 +153,20 @@ export function CartSheet() {
 
             {/* Footer */}
             <div className="border-t border-border pt-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total</span>
-                <span className="font-bold text-xl text-foreground">
-                  {formatPrice(totalPrice)}
-                </span>
+              {/* Summary breakdown */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-foreground">{formatPrice(subtotal)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">IVA ({Math.round(TAX_RATE * 100)}%)</span>
+                  <span className="text-foreground">{formatPrice(taxes)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-border pt-2">
+                  <span className="font-semibold text-foreground">Total</span>
+                  <span className="font-bold text-xl text-foreground">{formatPrice(total)}</span>
+                </div>
               </div>
 
               {!isAuthenticated && (

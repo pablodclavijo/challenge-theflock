@@ -3,14 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   ShoppingBag,
+  ShoppingCart,
   Search,
   SlidersHorizontal,
   Heart,
   Star,
+  ChevronLeft,
+  ChevronRight,
+  Check,
 } from "lucide-react";
 import { apiClient } from "../services/api";
-import type { Product, Category } from "../types/product";
+import type { Product, Category, ProductListResponse } from "../types/product";
 import { CartSheet } from "../components/ui/CartSheet";
+import { useCart } from "../contexts/CartContext";
+
+const PAGE_SIZE = 12;
 
 export function ProductListPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,15 +26,31 @@ export function ProductListPage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [addedToCart, setAddedToCart] = useState<Record<number, boolean>>({});
+  const { addToCart } = useCart();
 
-  const { data: productsResponse, isLoading: loadingProducts } = useQuery({
-    queryKey: ["products", searchQuery, selectedCategoryId, minPrice, maxPrice],
+  const handleQuickAdd = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    if (product.stock === 0) return;
+    addToCart(
+      { productId: product.id, name: product.name, price: product.price, imageUrl: product.imageUrl ?? undefined },
+      1
+    );
+    setAddedToCart((prev) => ({ ...prev, [product.id]: true }));
+    setTimeout(() => setAddedToCart((prev) => ({ ...prev, [product.id]: false })), 2000);
+  };
+
+  const { data: productsResponse, isLoading: loadingProducts } = useQuery<ProductListResponse>({
+    queryKey: ["products", searchQuery, selectedCategoryId, minPrice, maxPrice, currentPage],
     queryFn: () =>
       apiClient.getProducts({
         search: searchQuery || undefined,
         category: selectedCategoryId ?? undefined,
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        page: currentPage,
+        limit: PAGE_SIZE,
       }),
   });
 
@@ -36,7 +59,14 @@ export function ProductListPage() {
     queryFn: () => apiClient.getCategories(),
   });
 
-  const products: Product[] = productsResponse?.data ?? productsResponse ?? [];
+  const products: Product[] = productsResponse?.data ?? [];
+  const totalPages: number = productsResponse?.totalPages ?? 1;
+  const totalProducts: number = productsResponse?.total ?? 0;
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const toggleFavorite = (id: number) => {
     setFavorites((prev) =>
@@ -53,6 +83,12 @@ export function ProductListPage() {
     setMinPrice("");
     setMaxPrice("");
     setFiltersOpen(false);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (fn: () => void) => {
+    fn();
+    setCurrentPage(1);
   };
 
   const formatPrice = (price: number) =>
@@ -109,7 +145,7 @@ export function ProductListPage() {
                 type="text"
                 placeholder="Buscar productos..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleFilterChange(() => setSearchQuery(e.target.value))}
                 className="w-full pl-12 pr-4 py-4 bg-primary-foreground/10 backdrop-blur border border-primary-foreground/15 rounded-xl text-primary-foreground placeholder-primary-foreground/30 focus:outline-none focus:ring-2 focus:ring-accent focus:bg-primary-foreground/15 transition-all text-sm"
               />
             </div>
@@ -122,7 +158,7 @@ export function ProductListPage() {
         <div className="flex flex-col gap-5 mb-10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {loadingProducts ? "Cargando..." : `${products.length} producto${products.length !== 1 ? "s" : ""}`}
+              {loadingProducts ? "Cargando..." : `${totalProducts} producto${totalProducts !== 1 ? "s" : ""}`}
             </p>
             <button
               onClick={() => setFiltersOpen(!filtersOpen)}
@@ -140,7 +176,7 @@ export function ProductListPage() {
           {/* Category tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
-              onClick={() => setSelectedCategoryId(null)}
+              onClick={() => handleFilterChange(() => setSelectedCategoryId(null))}
               className={`shrink-0 text-sm font-medium px-5 py-2 rounded-full border transition-all ${
                 selectedCategoryId === null
                   ? "bg-primary text-primary-foreground border-primary"
@@ -152,7 +188,7 @@ export function ProductListPage() {
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCategoryId(cat.id)}
+                onClick={() => handleFilterChange(() => setSelectedCategoryId(cat.id))}
                 className={`shrink-0 text-sm font-medium px-5 py-2 rounded-full border transition-all ${
                   selectedCategoryId === cat.id
                     ? "bg-primary text-primary-foreground border-primary"
@@ -174,7 +210,7 @@ export function ProductListPage() {
                   </label>
                   <select
                     value={selectedCategoryId ?? ""}
-                    onChange={(e) => setSelectedCategoryId(e.target.value ? Number(e.target.value) : null)}
+                    onChange={(e) => handleFilterChange(() => setSelectedCategoryId(e.target.value ? Number(e.target.value) : null))}
                     className="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent transition"
                   >
                     <option value="">Todas las categorias</option>
@@ -193,7 +229,7 @@ export function ProductListPage() {
                       type="number"
                       placeholder="0"
                       value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
+                      onChange={(e) => handleFilterChange(() => setMinPrice(e.target.value))}
                       className="w-full pl-12 pr-4 py-3 bg-secondary border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent transition"
                       min="0"
                     />
@@ -209,7 +245,7 @@ export function ProductListPage() {
                       type="number"
                       placeholder="9999"
                       value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
+                      onChange={(e) => handleFilterChange(() => setMaxPrice(e.target.value))}
                       className="w-full pl-12 pr-4 py-3 bg-secondary border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent transition"
                       min="0"
                     />
@@ -281,6 +317,20 @@ export function ProductListPage() {
                       Agotado
                     </div>
                   )}
+                  {/* Quick add to cart */}
+                  {product.stock > 0 && (
+                    <button
+                      onClick={(e) => handleQuickAdd(e, product)}
+                      className="absolute bottom-3 right-3 w-10 h-10 bg-card/90 backdrop-blur rounded-full flex items-center justify-center border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                      aria-label="Agregar al carrito"
+                    >
+                      {addedToCart[product.id] ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <ShoppingCart className="h-4 w-4" />
+                      )}
+                    </button>
+                  )}
                 </div>
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -299,6 +349,56 @@ export function ProductListPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loadingProducts && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-12">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1 px-4 py-2 text-sm font-medium border border-border rounded-full bg-card text-foreground hover:border-foreground/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .reduce<(number | "…")[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("…");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((item, idx) =>
+                  item === "…" ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground text-sm select-none">…</span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => goToPage(item as number)}
+                      className={`w-9 h-9 text-sm font-medium rounded-full border transition-all ${
+                        currentPage === item
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card text-foreground border-border hover:border-foreground/20"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
+            </div>
+
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1 px-4 py-2 text-sm font-medium border border-border rounded-full bg-card text-foreground hover:border-foreground/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         )}
 
