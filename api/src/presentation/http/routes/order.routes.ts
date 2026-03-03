@@ -1,6 +1,10 @@
 import { Router } from "express";
-import { authenticate, requireComprador } from "../middlewares/authenticate.middleware";
+import { authenticate, createRequireCompradorMiddleware } from "../middlewares/authenticate.middleware";
 import { orderController } from "../controllers/order.controller";
+import { SequelizeRoleRepository } from "../../../infrastructure/persistence/sequelize/repositories/sequelize-role.repository";
+
+const roleRepository = new SequelizeRoleRepository();
+const requireComprador = createRequireCompradorMiddleware(roleRepository);
 
 export const orderRouter = Router();
 

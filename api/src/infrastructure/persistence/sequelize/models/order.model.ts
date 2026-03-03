@@ -36,7 +36,7 @@ export const initOrderModel = (sequelize: Sequelize): typeof Order => {
         field: "UserId"
       },
       status: {
-        type: DataTypes.ENUM(...Object.values(OrderStatus)),
+        type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: OrderStatus.Pending,
         field: "Status"

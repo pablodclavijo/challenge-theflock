@@ -44,19 +44,23 @@ export function ProductDetailPage() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return;
-    addToCart(
-      {
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        imageUrl: product.imageUrl,
-      },
-      quantity
-    );
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 3000);
+    try {
+      await addToCart(
+        {
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          imageUrl: product.imageUrl,
+        },
+        quantity
+      );
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 3000);
+    } catch (err) {
+      console.error("Failed to add to cart:", err);
+    }
   };
 
   return (

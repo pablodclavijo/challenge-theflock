@@ -7,8 +7,10 @@
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import { app } from "../../src/presentation/http/app";
-import { COMPRADOR_ROLE_ID } from "../../src/shared/constants";
 import { OrderStatus } from "../../src/domain/enums/order-status";
+
+// Test constants
+const TEST_COMPRADOR_ROLE_ID = "test-comprador-role-id";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Mock Sequelize database (needed for SequelizeOrderRepository.create transaction)
@@ -71,6 +73,16 @@ jest.mock("../../src/infrastructure/services/mock-payment.service", () => ({
   }))
 }));
 
+jest.mock(
+  "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model",
+  () => ({
+    AspNetRole: {
+      findOne: jest.fn(),
+      init: jest.fn()
+    }
+  })
+);
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Import mocked models
 // ──────────────────────────────────────────────────────────────────────────────
@@ -79,8 +91,10 @@ import { CartItem } from "../../src/infrastructure/persistence/sequelize/models/
 import { Order } from "../../src/infrastructure/persistence/sequelize/models/order.model";
 import { OrderItem } from "../../src/infrastructure/persistence/sequelize/models/orderItem.model";
 import { MockPaymentService } from "../../src/infrastructure/services/mock-payment.service";
+import { AspNetRole } from "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model";
 
 const mockCartFindAll = CartItem.findAll as jest.Mock;
+const mockRoleFindOne = AspNetRole.findOne as jest.Mock;
 const mockCartDestroy = CartItem.destroy as jest.Mock;
 const mockOrderCreate = Order.create as jest.Mock;
 const mockOrderFindByPk = Order.findByPk as jest.Mock;
@@ -108,7 +122,7 @@ const SHIPPING = "42 Elm Street";
 
 function makeToken(overrides: Record<string, unknown> = {}): string {
   return jwt.sign(
-    { sub: USER_ID, email: "buyer@order.test", roleId: COMPRADOR_ROLE_ID, ...overrides },
+    { sub: USER_ID, email: "buyer@order.test", roleId: TEST_COMPRADOR_ROLE_ID, ...overrides },
     JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -162,6 +176,10 @@ beforeEach(() => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("POST /api/orders", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("201 – creates order from cart; subtotal/tax/total correct", async () => {
     // Cart has 2 × $50 = $100 subtotal
     mockCartFindAll.mockResolvedValue([makeCartRow(50, 2)]);
@@ -228,6 +246,10 @@ describe("POST /api/orders", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("GET /api/orders", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("200 – returns paginated order list", async () => {
     mockOrderFindAndCount.mockResolvedValue({
       count: 2,
@@ -270,6 +292,10 @@ describe("GET /api/orders", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("GET /api/orders/:id", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("200 – returns order with items", async () => {
     const orderWithItems = { ...makeOrderRow(), items: [makeOrderItemRow()] };
     mockOrderFindByPk.mockResolvedValue(orderWithItems);
@@ -323,6 +349,9 @@ describe("GET /api/orders/:id", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("POST /api/orders/:id/payment", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
   it("200 – approved payment → status Paid", async () => {
     mockOrderFindByPk.mockResolvedValue(makeOrderRow({ total: 121 }));
     mockOrderUpdate.mockResolvedValue([1]);

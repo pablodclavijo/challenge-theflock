@@ -16,7 +16,7 @@ import type {
 
 export class ApiClient {
   private axiosInstance: AxiosInstance;
-  private baseURL: string = 'http://localhost:3000/api';
+  private baseURL: string = '/api';
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -44,8 +44,10 @@ export class ApiClient {
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          // Token expirado o inválido
+        const url = error.config?.url ?? '';
+        const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register');
+        if (error.response?.status === 401 && !isAuthEndpoint) {
+          // Token expirado o inválido — solo redirigir desde rutas protegidas
           tokenUtils.clearAuth();
           window.location.href = '/login';
         }

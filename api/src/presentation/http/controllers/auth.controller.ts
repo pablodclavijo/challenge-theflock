@@ -3,13 +3,15 @@ import { LoginRequestSchema, RegisterRequestSchema } from "../../../application/
 import { LoginUseCase } from "../../../application/use-cases/auth/login.use-case";
 import { RegisterUseCase } from "../../../application/use-cases/auth/register.use-case";
 import { SequelizeUserRepository } from "../../../infrastructure/persistence/sequelize/repositories/sequelize-user.repository";
+import { SequelizeRoleRepository } from "../../../infrastructure/persistence/sequelize/repositories/sequelize-role.repository";
 import { JwtService } from "../../../infrastructure/auth/jwt.service";
 import { AppError } from "../../../shared/errors/AppError";
 
 const userRepository = new SequelizeUserRepository();
+const roleRepository = new SequelizeRoleRepository();
 const jwtService = new JwtService();
-const loginUseCase = new LoginUseCase(userRepository, jwtService);
-const registerUseCase = new RegisterUseCase(userRepository, jwtService);
+const loginUseCase = new LoginUseCase(userRepository, roleRepository, jwtService);
+const registerUseCase = new RegisterUseCase(userRepository, roleRepository, jwtService);
 
 export const authController = {
   /**

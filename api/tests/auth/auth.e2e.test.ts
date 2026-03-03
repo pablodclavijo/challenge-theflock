@@ -8,7 +8,9 @@
 import request from "supertest";
 import { app } from "../../src/presentation/http/app";
 import { hashPassword } from "../../src/infrastructure/auth/aspnet-identity-hasher";
-import { COMPRADOR_ROLE_ID } from "../../src/shared/constants";
+
+// Test constants
+const TEST_COMPRADOR_ROLE_ID = "test-comprador-role-id";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Mock Sequelize database – prevents initModels from running (no live DB needed)
@@ -41,7 +43,19 @@ jest.mock(
   () => ({
     AspNetUserRole: {
       findOne: jest.fn(),
+      findAll: jest.fn(),
       create: jest.fn(),
+      init: jest.fn()
+    }
+  })
+);
+
+jest.mock(
+  "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model",
+  () => ({
+    AspNetRole: {
+      findOne: jest.fn(),
+      findAll: jest.fn(),
       init: jest.fn()
     }
   })
@@ -52,12 +66,16 @@ jest.mock(
 // ──────────────────────────────────────────────────────────────────────────────
 import { AspNetUser } from "../../src/infrastructure/persistence/sequelize/models/aspNetUser.model";
 import { AspNetUserRole } from "../../src/infrastructure/persistence/sequelize/models/aspNetUserRole.model";
+import { AspNetRole } from "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model";
 
 const mockFindOne = AspNetUser.findOne as jest.Mock;
 const mockFindByPk = AspNetUser.findByPk as jest.Mock;
 const mockCreate = AspNetUser.create as jest.Mock;
 const mockUserRoleFindOne = AspNetUserRole.findOne as jest.Mock;
+const mockUserRoleFindAll = AspNetUserRole.findAll as jest.Mock;
 const mockUserRoleCreate = AspNetUserRole.create as jest.Mock;
+const mockRoleFindOne = AspNetRole.findOne as jest.Mock;
+const mockRoleFindAll = AspNetRole.findAll as jest.Mock;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -98,6 +116,11 @@ function makeDbUser(overrides: Record<string, unknown> = {}): Record<string, unk
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("POST /api/auth/register", () => {
+  beforeEach(() => {
+    // Mock the role lookup for all register tests
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("201 – creates account and returns JWT + user data", async () => {
     mockFindOne.mockResolvedValue(null); // no existing user
     const createdUser = makeDbUser();
@@ -195,9 +218,21 @@ describe("POST /api/auth/register", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("POST /api/auth/login", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+    // Mock AspNetUserRole.findAll to return role IDs
+    mockUserRoleFindAll.mockResolvedValue([
+      { RoleId: TEST_COMPRADOR_ROLE_ID }
+    ]);
+    // Mock AspNetRole.findAll to return role details
+    mockRoleFindAll.mockResolvedValue([
+      { Name: "Comprador" }
+    ]);
+  });
+
   it("200 – returns JWT and user info for valid Comprador credentials", async () => {
     mockFindOne.mockResolvedValue(makeDbUser());
-    mockUserRoleFindOne.mockResolvedValue({ UserId: TEST_USER_ID, RoleId: COMPRADOR_ROLE_ID });
+    mockUserRoleFindOne.mockResolvedValue({ UserId: TEST_USER_ID, RoleId: TEST_COMPRADOR_ROLE_ID });
 
     const res = await request(app).post("/api/auth/login").send({
       email: TEST_EMAIL,
@@ -253,7 +288,7 @@ describe("POST /api/auth/login", () => {
 
   it("403 – rejects user without the Comprador role", async () => {
     mockFindOne.mockResolvedValue(makeDbUser());
-    mockUserRoleFindOne.mockResolvedValue(null); // not in AspNetUserRoles
+    mockUserRoleFindAll.mockResolvedValue([]); // user has no roles
 
     const res = await request(app).post("/api/auth/login").send({
       email: TEST_EMAIL,

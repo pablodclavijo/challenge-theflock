@@ -1,5 +1,5 @@
 /**
- * Middleware tests: authenticate + requireComprador
+ * Middleware tests: authenticate + createRequireCompradorMiddleware
  *
  * A minimal Express app is created inline so middleware is tested in isolation
  * without touching the real routes.
@@ -7,13 +7,36 @@
 import express from "express";
 import request from "supertest";
 import jwt from "jsonwebtoken";
-import { authenticate, requireComprador } from "../../src/presentation/http/middlewares/authenticate.middleware";
+import { authenticate, createRequireCompradorMiddleware } from "../../src/presentation/http/middlewares/authenticate.middleware";
 import { AppError } from "../../src/shared/errors/AppError";
-import { COMPRADOR_ROLE_ID } from "../../src/shared/constants";
+
+// Test constants
+const TEST_COMPRADOR_ROLE_ID = "test-comprador-role-id";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Mock Sequelize models
+// ──────────────────────────────────────────────────────────────────────────────
+jest.mock(
+  "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model",
+  () => ({
+    AspNetRole: {
+      findOne: jest.fn(),
+      init: jest.fn()
+    }
+  })
+);
+
+import { AspNetRole } from "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model";
+import { SequelizeRoleRepository } from "../../src/infrastructure/persistence/sequelize/repositories/sequelize-role.repository";
+
+const mockRoleFindOne = AspNetRole.findOne as jest.Mock;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Minimal app that exercises the middleware chain
 // ──────────────────────────────────────────────────────────────────────────────
+
+const roleRepository = new SequelizeRoleRepository();
+const requireComprador = createRequireCompradorMiddleware(roleRepository);
 
 const testApp = express();
 testApp.use(express.json());
@@ -50,11 +73,16 @@ function signToken(payload: Record<string, unknown>, expiresIn = "1h"): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn } as jwt.SignOptions);
 }
 
+
 // ──────────────────────────────────────────────────────────────────────────────
 // authenticate middleware
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("authenticate middleware", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("401 – no Authorization header", async () => {
     const res = await request(testApp).get("/protected");
 
@@ -81,7 +109,7 @@ describe("authenticate middleware", () => {
 
   it("401 – expired token", async () => {
     const token = signToken(
-      { sub: USER_ID, email: "x@x.com", roleId: COMPRADOR_ROLE_ID },
+      { sub: USER_ID, email: "x@x.com", roleId: TEST_COMPRADOR_ROLE_ID },
       "-1s" // already expired
     );
 
@@ -94,7 +122,7 @@ describe("authenticate middleware", () => {
 
   it("401 – token signed with the wrong secret", async () => {
     const token = jwt.sign(
-      { sub: USER_ID, email: "x@x.com", roleId: COMPRADOR_ROLE_ID },
+      { sub: USER_ID, email: "x@x.com", roleId: TEST_COMPRADOR_ROLE_ID },
       "wrong_secret",
       { expiresIn: "1h" }
     );
@@ -107,7 +135,7 @@ describe("authenticate middleware", () => {
   });
 
   it("200 – valid Comprador token is accepted", async () => {
-    const token = signToken({ sub: USER_ID, email: "buyer@example.com", roleId: COMPRADOR_ROLE_ID });
+    const token = signToken({ sub: USER_ID, email: "buyer@example.com", roleId: TEST_COMPRADOR_ROLE_ID });
 
     const res = await request(testApp)
       .get("/protected")
@@ -128,12 +156,16 @@ describe("authenticate middleware", () => {
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
-// requireComprador middleware
+// createRequireCompradorMiddleware
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("requireComprador middleware", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("200 – Comprador role passes through", async () => {
-    const token = signToken({ sub: USER_ID, email: "buyer@example.com", roleId: COMPRADOR_ROLE_ID });
+    const token = signToken({ sub: USER_ID, email: "buyer@example.com", roleId: TEST_COMPRADOR_ROLE_ID });
 
     const res = await request(testApp)
       .get("/comprador-only")

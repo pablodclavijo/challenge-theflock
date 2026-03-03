@@ -1,17 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthContext } from './contexts/AuthContext';
-import { LoginPage, RegisterPage, DashboardPage, ProductListPage, ProductDetailPage } from './pages';
+import { LoginPage, RegisterPage, DashboardPage, ProductListPage, ProductDetailPage, CheckoutPage, OrdersPage, OrderDetailPage } from './pages';
 
 function App() {
-  const { isAuthenticated, isLoading } = useAuthContext();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const { isAuthenticated } = useAuthContext();
 
   return (
     <Routes>
@@ -23,6 +15,9 @@ function App() {
 
       {/* Protected Routes */}
       <Route path="/dashboard" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" replace />} />
+      <Route path="/checkout" element={isAuthenticated ? <CheckoutPage /> : <Navigate to="/login?from=checkout" replace />} />
+      <Route path="/orders" element={isAuthenticated ? <OrdersPage /> : <Navigate to="/login" replace />} />
+      <Route path="/orders/:id" element={isAuthenticated ? <OrderDetailPage /> : <Navigate to="/login" replace />} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />

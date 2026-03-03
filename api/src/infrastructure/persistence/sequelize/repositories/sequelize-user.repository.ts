@@ -2,6 +2,7 @@ import { IUserRepository } from "../../../../domain/repositories/user.repository
 import { User } from "../../../../domain/entities/user";
 import { AspNetUser } from "../models/aspNetUser.model";
 import { AspNetUserRole } from "../models/aspNetUserRole.model";
+import { AspNetRole } from "../models/aspNetRole.model";
 
 export class SequelizeUserRepository implements IUserRepository {
   async findByNormalizedEmail(normalizedEmail: string): Promise<User | null> {
@@ -43,6 +44,30 @@ export class SequelizeUserRepository implements IUserRepository {
       where: { UserId: userId, RoleId: roleId }
     });
     return userRole !== null;
+  }
+
+  async getUserRoleNames(userId: string): Promise<string[]> {
+    // Get all role IDs for this user
+    const userRoles = await AspNetUserRole.findAll({
+      where: { UserId: userId },
+      attributes: ["RoleId"]
+    });
+
+    if (userRoles.length === 0) {
+      return [];
+    }
+
+    const roleIds = userRoles.map((ur: any) => ur.RoleId);
+
+    // Query the roles by their IDs
+    const roles = await AspNetRole.findAll({
+      where: { Id: roleIds },
+      attributes: ["Name"]
+    });
+
+    return roles
+      .map((role: any) => role.Name)
+      .filter((name: string | null | undefined): name is string => Boolean(name));
   }
 
   async assignRole(userId: string, roleId: string): Promise<void> {

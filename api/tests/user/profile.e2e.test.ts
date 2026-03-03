@@ -8,7 +8,9 @@
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import { app } from "../../src/presentation/http/app";
-import { COMPRADOR_ROLE_ID } from "../../src/shared/constants";
+
+// Test constants
+const TEST_COMPRADOR_ROLE_ID = "test-comprador-role-id";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Mock Sequelize database – prevents initModels from running (no live DB needed)
@@ -48,14 +50,26 @@ jest.mock(
   })
 );
 
+jest.mock(
+  "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model",
+  () => ({
+    AspNetRole: {
+      findOne: jest.fn(),
+      init: jest.fn()
+    }
+  })
+);
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Import mocked models
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { AspNetUser } from "../../src/infrastructure/persistence/sequelize/models/aspNetUser.model";
+import { AspNetRole } from "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model";
 
 const mockFindByPk = AspNetUser.findByPk as jest.Mock;
 const mockUpdate = AspNetUser.update as jest.Mock;
+const mockRoleFindOne = AspNetRole.findOne as jest.Mock;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -67,7 +81,7 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 function makeToken(overrides: Record<string, unknown> = {}): string {
   return jwt.sign(
-    { sub: TEST_USER_ID, email: TEST_EMAIL, roleId: COMPRADOR_ROLE_ID, ...overrides },
+    { sub: TEST_USER_ID, email: TEST_EMAIL, roleId: TEST_COMPRADOR_ROLE_ID, ...overrides },
     JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -103,6 +117,10 @@ function makeDbUser(overrides: Record<string, unknown> = {}): Record<string, unk
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("GET /api/users/profile", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("200 – returns profile for authenticated buyer", async () => {
     mockFindByPk.mockResolvedValue(makeDbUser());
 
@@ -171,6 +189,10 @@ describe("GET /api/users/profile", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("PUT /api/users/profile", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("200 – updates fullName and returns updated profile", async () => {
     const original = makeDbUser();
     const updated = makeDbUser({ FullName: "Updated Name" });

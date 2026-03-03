@@ -28,14 +28,27 @@ export function CartSheet() {
     new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
 
   const handleCheckout = () => {
+    setOpen(false);
     if (!isAuthenticated) {
-      // Close sheet and send user to login with a redirect hint
-      setOpen(false);
-      navigate("/login?from=cart");
+      navigate("/login?from=checkout");
     } else {
-      // Authenticated: placeholder for real checkout flow
-      setOpen(false);
-      navigate("/dashboard");
+      navigate("/checkout");
+    }
+  };
+
+  const handleUpdateQuantity = async (productId: number, newQuantity: number) => {
+    try {
+      await updateQuantity(productId, newQuantity);
+    } catch (err) {
+      console.error("Failed to update quantity:", err);
+    }
+  };
+
+  const handleRemoveFromCart = async (productId: number) => {
+    try {
+      await removeFromCart(productId);
+    } catch (err) {
+      console.error("Failed to remove from cart:", err);
     }
   };
 
@@ -120,7 +133,7 @@ export function CartSheet() {
                     {/* Quantity controls */}
                     <div className="flex items-center gap-2 mt-2">
                       <button
-                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
                         className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
                         aria-label="Reducir cantidad"
                       >
@@ -130,7 +143,7 @@ export function CartSheet() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
                         className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
                         aria-label="Aumentar cantidad"
                       >
@@ -141,7 +154,7 @@ export function CartSheet() {
 
                   {/* Remove */}
                   <button
-                    onClick={() => removeFromCart(item.productId)}
+                    onClick={() => handleRemoveFromCart(item.productId)}
                     className="self-start mt-1 text-muted-foreground hover:text-destructive transition-colors"
                     aria-label="Eliminar del carrito"
                   >

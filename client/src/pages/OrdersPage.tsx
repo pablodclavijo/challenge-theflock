@@ -1,0 +1,258 @@
+/**
+ * OrdersPage
+ * Buyer's order history with status badges and pagination.
+ */
+
+import { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  ShoppingBag,
+  ChevronRight,
+  ArrowLeft,
+  Loader2,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Truck,
+  Package,
+  PackageCheck,
+} from "lucide-react";
+import { apiClient } from "../services/api";
+import { useAuthContext } from "../contexts/AuthContext";
+import type { Order, OrderStatus, OrderListResponse } from "../types/order";
+
+/* ─── Status helpers ─── */
+
+interface StatusMeta {
+  label: string;
+  icon: React.ReactNode;
+  className: string;
+}
+
+function getStatusMeta(status: OrderStatus): StatusMeta {
+  switch (status) {
+    case "Pendiente":
+      return {
+        label: "Pendiente",
+        icon: <Clock className="h-3 w-3" />,
+        className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+      };
+    case "Pagado":
+      return {
+        label: "Pagado",
+        icon: <CheckCircle2 className="h-3 w-3" />,
+        className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      };
+    case "PagoFallido":
+      return {
+        label: "Pago fallido",
+        icon: <XCircle className="h-3 w-3" />,
+        className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+      };
+    case "Confirmado":
+      return {
+        label: "Confirmado",
+        icon: <PackageCheck className="h-3 w-3" />,
+        className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+      };
+    case "Enviado":
+      return {
+        label: "Enviado",
+        icon: <Truck className="h-3 w-3" />,
+        className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      };
+    case "Entregado":
+      return {
+        label: "Entregado",
+        icon: <Package className="h-3 w-3" />,
+        className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+      };
+  }
+}
+
+export function StatusBadge({ status }: { status: OrderStatus }) {
+  const meta = getStatusMeta(status);
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${meta?.className}`}>
+      {meta?.icon}
+      {meta?.label}
+    </span>
+  );
+}
+
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+
+const formatDate = (iso: string) =>
+  new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
+
+/* ─── Component ─── */
+
+const LIMIT = 10;
+
+export function OrdersPage() {
+  const { isAuthenticated } = useAuthContext();
+  const navigate = useNavigate();
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchOrders = useCallback(async (p: number) => {
+    setLoading(true);
+    setError("");
+    try {
+      const res: OrderListResponse = await apiClient.getOrders({ page: p, limit: LIMIT });
+      setOrders(res.data);
+      setTotal(res.total);
+      setTotalPages(res.totalPages);
+    } catch {
+      setError("No se pudo cargar el historial de pedidos.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    fetchOrders(page);
+  }, [isAuthenticated, page, fetchOrders, navigate]);
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Volver</span>
+          </button>
+          <h1 className="font-serif text-lg font-semibold text-foreground flex-1">Mis pedidos</h1>
+          <button
+            onClick={() => fetchOrders(page)}
+            className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
+            aria-label="Actualizar"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-4 py-8">
+        {/* Loading */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-32 gap-4">
+            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+            <p className="text-sm text-muted-foreground">Cargando pedidos…</p>
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="text-center py-20 space-y-4">
+            <p className="text-sm text-destructive">{error}</p>
+            <button
+              onClick={() => fetchOrders(page)}
+              className="text-sm text-primary underline underline-offset-2"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && !error && orders.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-32 gap-6 text-center">
+            <div className="w-20 h-20 rounded-2xl bg-secondary flex items-center justify-center">
+              <ShoppingBag className="h-9 w-9 text-muted-foreground" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Aún no tienes pedidos</h2>
+              <p className="text-sm text-muted-foreground mt-1">Cuando realices tu primera compra aparecerá aquí.</p>
+            </div>
+            <Link
+              to="/"
+              className="text-sm text-primary underline underline-offset-2"
+            >
+              Ir al catálogo
+            </Link>
+          </div>
+        )}
+
+        {/* Order list */}
+        {!loading && !error && orders.length > 0 && (
+          <>
+            <p className="text-sm text-muted-foreground mb-4">
+              {total} {total === 1 ? "pedido" : "pedidos"} en total
+            </p>
+
+            <ul className="space-y-4">
+              {orders.map((order) => (
+                <li key={order.id}>
+                  <Link
+                    to={`/orders/${order.id}`}
+                    className="group flex items-center gap-4 p-5 rounded-2xl border border-border bg-background hover:border-primary/40 hover:bg-secondary/40 transition-all"
+                  >
+                    {/* Order icon */}
+                    <div className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                      <ShoppingBag className="h-5 w-5 text-muted-foreground" />
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-sm font-bold text-foreground">#{order.id}</span>
+                        <StatusBadge status={order.status} />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{formatDate(order.createdAt)}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{order.shippingAddress}</p>
+                    </div>
+
+                    {/* Total + chevron */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="font-bold text-foreground">{formatPrice(order.total)}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-8">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Anterior
+                </button>
+                <span className="text-sm text-muted-foreground">
+                  Página {page} de {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+    </div>
+  );
+}

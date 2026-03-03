@@ -1,14 +1,15 @@
 import { randomUUID } from "crypto";
 import { IUserRepository } from "../../../domain/repositories/user.repository";
+import { IRoleRepository } from "../../../domain/repositories/role.repository";
 import { IJwtService } from "../../ports/jwt.port";
 import { RegisterRequestDto, AuthResponseDto } from "../../dtos/auth.dto";
 import { ConflictError } from "../../../shared/errors/AppError";
 import { hashPassword } from "../../../infrastructure/auth/aspnet-identity-hasher";
-import { COMPRADOR_ROLE_ID } from "../../../shared/constants";
 
 export class RegisterUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
+    private readonly roleRepository: IRoleRepository,
     private readonly jwtService: IJwtService
   ) {}
 
@@ -19,6 +20,11 @@ export class RegisterUseCase {
 
     if (existing) {
       throw new ConflictError("Email already registered");
+    }
+
+    const compradorRoleId = await this.roleRepository.findIdByName("Comprador");
+    if (!compradorRoleId) {
+      throw new Error("Comprador role not found in database");
     }
 
     const id = randomUUID();
@@ -40,12 +46,12 @@ export class RegisterUseCase {
       concurrencyStamp: randomUUID()
     });
 
-    await this.userRepository.assignRole(user.id, COMPRADOR_ROLE_ID);
+    await this.userRepository.assignRole(user.id, compradorRoleId);
 
     const accessToken = this.jwtService.sign({
       sub: user.id,
       email: user.email,
-      roleId: COMPRADOR_ROLE_ID
+      roleId: compradorRoleId
     });
 
     return {

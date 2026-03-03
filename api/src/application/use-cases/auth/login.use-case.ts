@@ -1,13 +1,14 @@
 import { IUserRepository } from "../../../domain/repositories/user.repository";
+import { IRoleRepository } from "../../../domain/repositories/role.repository";
 import { IJwtService } from "../../ports/jwt.port";
 import { LoginRequestDto, AuthResponseDto } from "../../dtos/auth.dto";
 import { UnauthorizedError, ForbiddenError } from "../../../shared/errors/AppError";
 import { verifyPassword } from "../../../infrastructure/auth/aspnet-identity-hasher";
-import { COMPRADOR_ROLE_ID } from "../../../shared/constants";
 
 export class LoginUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
+    private readonly roleRepository: IRoleRepository,
     private readonly jwtService: IJwtService
   ) {}
 
@@ -29,15 +30,21 @@ export class LoginUseCase {
       throw new UnauthorizedError("Invalid email or password");
     }
 
-    const isComprador = await this.userRepository.hasRole(user.id, COMPRADOR_ROLE_ID);
-    if (!isComprador) {
+    const userRoleNames = await this.userRepository.getUserRoleNames(user.id);
+    const hasCompradorRole = userRoleNames.includes("Comprador");
+    if (!hasCompradorRole) {
       throw new ForbiddenError("Access restricted to buyers");
+    }
+
+    const compradorRoleId = await this.roleRepository.findIdByName("Comprador");
+    if (!compradorRoleId) {
+      throw new Error("Comprador role not found in database");
     }
 
     const accessToken = this.jwtService.sign({
       sub: user.id,
       email: user.email,
-      roleId: COMPRADOR_ROLE_ID
+      roleId: compradorRoleId
     });
 
     return {

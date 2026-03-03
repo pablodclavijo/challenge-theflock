@@ -148,6 +148,19 @@ export function DashboardPage() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
               </button>
+              <Link
+                to="/orders"
+                className="w-full flex items-center gap-4 p-5 hover:bg-secondary transition group text-left border-b border-border"
+              >
+                <div className="w-10 h-10 bg-secondary text-foreground rounded-xl flex items-center justify-center shrink-0">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground text-sm">Mis pedidos</p>
+                  <p className="text-xs text-muted-foreground">Historial de compras</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
+              </Link>
               <button className="w-full flex items-center gap-4 p-5 hover:bg-secondary transition group text-left border-b border-border">
                 <div className="w-10 h-10 bg-secondary text-foreground rounded-xl flex items-center justify-center shrink-0">
                   <Heart className="w-5 h-5" />
@@ -196,10 +209,10 @@ export function DashboardPage() {
             <div className="bg-card rounded-2xl border border-border shadow-sm">
               <div className="flex items-center justify-between p-6 pb-0">
                 <h2 className="font-serif text-lg font-bold text-foreground">Pedidos recientes</h2>
-                <span className="text-sm text-accent font-medium hover:underline cursor-pointer flex items-center gap-1">
+                <Link to="/orders" className="text-sm text-accent font-medium hover:underline cursor-pointer flex items-center gap-1">
                   Ver todos
                   <ChevronRight className="h-3.5 w-3.5" />
-                </span>
+                </Link>
               </div>
               <div className="p-6 pt-4">
                 {loadingOrders ? (
@@ -213,8 +226,9 @@ export function DashboardPage() {
                 ) : (
                   <div className="space-y-3">
                     {orders.map((order: any) => (
-                      <div
+                      <Link
                         key={order.id}
+                        to={`/orders/${order.id}`}
                         className="flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-secondary/50 transition-colors cursor-pointer group"
                       >
                         <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center shrink-0">
@@ -244,7 +258,7 @@ export function DashboardPage() {
                           </p>
                         </div>
                         <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 )}

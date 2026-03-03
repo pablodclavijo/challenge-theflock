@@ -8,7 +8,9 @@
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import { app } from "../../src/presentation/http/app";
-import { COMPRADOR_ROLE_ID } from "../../src/shared/constants";
+
+// Test constants
+const TEST_COMPRADOR_ROLE_ID = "test-comprador-role-id";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Mock Sequelize database – prevents initModels from running (no live DB needed)
@@ -48,14 +50,26 @@ jest.mock(
   })
 );
 
+jest.mock(
+  "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model",
+  () => ({
+    AspNetRole: {
+      findOne: jest.fn(),
+      init: jest.fn()
+    }
+  })
+);
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Import mocked models
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { CartItem } from "../../src/infrastructure/persistence/sequelize/models/cartItem.model";
 import { Product } from "../../src/infrastructure/persistence/sequelize/models/product.model";
+import { AspNetRole } from "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model";
 
 const mockCartFindAll = CartItem.findAll as jest.Mock;
+const mockRoleFindOne = AspNetRole.findOne as jest.Mock;
 const mockCartFindOne = CartItem.findOne as jest.Mock;
 const mockCartUpsert = CartItem.upsert as jest.Mock;
 const mockCartDestroy = CartItem.destroy as jest.Mock;
@@ -70,7 +84,7 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 function makeToken(overrides: Record<string, unknown> = {}): string {
   return jwt.sign(
-    { sub: USER_ID, email: "buyer@cart.test", roleId: COMPRADOR_ROLE_ID, ...overrides },
+    { sub: USER_ID, email: "buyer@cart.test", roleId: TEST_COMPRADOR_ROLE_ID, ...overrides },
     JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -121,6 +135,10 @@ beforeEach(() => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("GET /api/cart", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("200 – returns empty cart", async () => {
     mockCartFindAll.mockResolvedValue([]);
 
@@ -170,6 +188,10 @@ describe("GET /api/cart", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("POST /api/cart", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("201 – adds new item to cart", async () => {
     mockProductFindOne.mockResolvedValue(makeProductRow());
     mockCartFindOne
@@ -246,6 +268,10 @@ describe("POST /api/cart", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("PUT /api/cart/:productId", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("200 – updates quantity", async () => {
     mockProductFindOne.mockResolvedValue(makeProductRow({ stock: 50 }));
     // updateQuantity: findOne then save then reload
@@ -305,6 +331,10 @@ describe("PUT /api/cart/:productId", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 describe("DELETE /api/cart/:productId", () => {
+  beforeEach(() => {
+    mockRoleFindOne.mockResolvedValue({ Id: TEST_COMPRADOR_ROLE_ID });
+  });
+
   it("204 – removes item", async () => {
     mockCartDestroy.mockResolvedValue(1); // 1 row deleted
 

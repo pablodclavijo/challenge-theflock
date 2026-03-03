@@ -19,14 +19,25 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
+
+    if (!email.trim() || !password.trim()) {
+      setError("Por favor completá tu correo y contraseña.");
+      return;
+    }
+
+    setIsLoading(true);
     try {
       await login(email, password);
-      // Redirect back to cart view (product list) so user can proceed to checkout
       navigate(fromCart ? "/" : "/dashboard", { replace: true });
-    } catch (err) {
-      setError(typeof err === "string" ? err : "Credenciales incorrectas. Inténtalo de nuevo.");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+      const serverMsg = axiosErr?.response?.data?.message;
+      if (axiosErr?.response?.status === 401 || axiosErr?.response?.status === 400) {
+        setError(serverMsg ?? "Correo o contraseña incorrectos.");
+      } else {
+        setError(serverMsg ?? "Error al iniciar sesión. Intentalo de nuevo.");
+      }
     } finally {
       setIsLoading(false);
     }

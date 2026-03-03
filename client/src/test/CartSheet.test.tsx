@@ -262,7 +262,7 @@ describe('checkout button', () => {
     ).toBeInTheDocument();
   });
 
-  it('navigates to /login?from=cart when guest clicks checkout', async () => {
+  it('navigates to /login?from=checkout when guest clicks checkout', async () => {
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
@@ -270,7 +270,7 @@ describe('checkout button', () => {
     const checkoutBtn = screen.getByRole('button', { name: /iniciar sesión para pagar/i });
     await user.click(checkoutBtn);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/login?from=cart');
+    expect(mockNavigate).toHaveBeenCalledWith('/login?from=checkout');
   });
 
   it('shows "Finalizar compra" when authenticated', async () => {
@@ -285,7 +285,7 @@ describe('checkout button', () => {
     ).toBeInTheDocument();
   });
 
-  it('navigates to /dashboard when authenticated user checks out', async () => {
+  it('navigates to /checkout when authenticated user clicks checkout', async () => {
     mockIsAuthenticated = true;
 
     const user = userEvent.setup();
@@ -295,6 +295,6 @@ describe('checkout button', () => {
     const checkoutBtn = screen.getByRole('button', { name: /finalizar compra/i });
     await user.click(checkoutBtn);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+    expect(mockNavigate).toHaveBeenCalledWith('/checkout');
   });
 });
