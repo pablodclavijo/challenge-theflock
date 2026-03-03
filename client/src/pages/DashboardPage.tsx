@@ -4,96 +4,127 @@
  */
 
 import { useAuthContext } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { useProtectedRoute } from '../hooks/useProtectedRoute';
+import { Navbar } from '../components/Navbar';
 
 export const DashboardPage = () => {
-  const navigate = useNavigate();
-  const { user, logout, isLoading } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
   useProtectedRoute();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-slate-900"></div>
       </div>
     );
   }
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Encabezado */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Panel</h1>
-            <p className="text-gray-600 mt-1">¡Bienvenido de nuevo, {user?.fullName}!</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-          >
-            Cerrar Sesión
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50">
+      <Navbar />
 
-      {/* Contenido Principal */}
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Tarjeta Información de Perfil */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Información del Perfil</h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500">Correo Electrónico</p>
-                <p className="text-gray-900 font-semibold">{user?.email}</p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-16">
+        {/* Page header */}
+        <div className="mb-10">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">
+            Hola, {user?.fullName?.split(' ')[0]} 👋
+          </h1>
+          <p className="text-slate-500 text-sm mt-2">Bienvenido a tu panel de cuenta.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Profile card */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-7">
+            <div className="flex items-center gap-5 mb-7">
+              <div className="w-14 h-14 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold text-xl shrink-0">
+                {user?.fullName?.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="text-sm text-gray-500">Nombre Completo</p>
-                <p className="text-gray-900 font-semibold">{user?.fullName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Dirección de Envío</p>
-                <p className="text-gray-900 font-semibold">
-                  {user?.shippingAddress || 'No configurada'}
-                </p>
+                <h2 className="text-base font-bold text-slate-900">{user?.fullName}</h2>
+                <p className="text-sm text-slate-500">{user?.email}</p>
               </div>
             </div>
-            <button className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+
+            <div className="space-y-5 pt-5 border-t border-slate-100">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Correo</span>
+                <span className="text-sm text-slate-700 font-medium">{user?.email}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nombre</span>
+                <span className="text-sm text-slate-700 font-medium">{user?.fullName}</span>
+              </div>
+              <div className="flex justify-between items-start">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">Dirección</span>
+                <span className="text-sm text-slate-700 font-medium text-right ml-4">
+                  {user?.shippingAddress || <span className="text-slate-400 font-normal italic">No configurada</span>}
+                </span>
+              </div>
+            </div>
+
+            <button className="mt-7 w-full py-3 px-4 border border-slate-300 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition">
               Editar Perfil
             </button>
           </div>
 
-          {/* Tarjeta Acciones Rápidas */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Acciones Rápidas</h2>
+          {/* Quick actions */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-7">
+            <h2 className="text-base font-bold text-slate-900 mb-5">Acciones rápidas</h2>
             <div className="space-y-3">
-              <button className="w-full text-left p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition duration-200">
-                <p className="font-semibold text-blue-900">Explorar Productos</p>
-                <p className="text-sm text-blue-700">Navega nuestro catálogo</p>
+              <a
+                href="/"
+                className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group"
+              >
+                <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900 text-sm">Explorar productos</p>
+                  <p className="text-xs text-slate-500">Navega nuestro catálogo</p>
+                </div>
+                <svg className="w-4 h-4 text-slate-400 ml-auto group-hover:text-slate-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+              <button className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group text-left">
+                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900 text-sm">Ver carrito</p>
+                  <p className="text-xs text-slate-500">Revisa tus productos</p>
+                </div>
+                <svg className="w-4 h-4 text-slate-400 ml-auto group-hover:text-slate-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
-              <button className="w-full text-left p-4 bg-green-50 hover:bg-green-100 rounded-lg transition duration-200">
-                <p className="font-semibold text-green-900">Ver Carrito</p>
-                <p className="text-sm text-green-700">Verifica tus artículos</p>
-              </button>
-              <button className="w-full text-left p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition duration-200">
-                <p className="font-semibold text-purple-900">Historial de Pedidos</p>
-                <p className="text-sm text-purple-700">Ver pedidos anteriores</p>
+              <button className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition group text-left">
+                <div className="w-10 h-10 bg-violet-500 rounded-xl flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900 text-sm">Mis pedidos</p>
+                  <p className="text-xs text-slate-500">Historial de compras</p>
+                </div>
+                <svg className="w-4 h-4 text-slate-400 ml-auto group-hover:text-slate-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Sección Placeholder */}
-        <div className="mt-12 bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-600 mb-4">¡Más características próximamente!</p>
-          <p className="text-gray-500 text-sm">Catálogo de productos, carrito de compras y administración de pedidos</p>
+        {/* Coming soon banner */}
+        <div className="mt-8 bg-linear-to-r from-slate-900 to-slate-700 rounded-2xl p-10 text-center text-white">
+          <p className="text-base font-semibold mb-1">Más funciones próximamente</p>
+          <p className="text-slate-400 text-sm">Gestión de pedidos, lista de deseos y mucho más.</p>
         </div>
       </main>
     </div>

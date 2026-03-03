@@ -22,20 +22,20 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   return (
     <Link
       to={`/products/${product.id}`}
-      className="group block bg-white rounded-lg shadow hover:shadow-xl transition-shadow duration-300 overflow-hidden"
+      className="group block bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-slate-300 hover:shadow-card-hover shadow-card transition-all duration-300"
     >
-      {/* Imagen del Producto */}
-      <div className="relative h-48 md:h-64 bg-gray-200 overflow-hidden">
+      {/* Product Image */}
+      <div className="relative aspect-square bg-slate-100 overflow-hidden">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400">
+          <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-slate-100 to-slate-200">
             <svg
-              className="w-16 h-16 text-gray-500"
+              className="w-16 h-16 text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -49,38 +49,53 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             </svg>
           </div>
         )}
+
+        {/* Out of stock overlay */}
         {!inStock && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">Agotado</span>
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="text-sm font-semibold text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-300">
+              Agotado
+            </span>
           </div>
+        )}
+
+        {/* Stock badge */}
+        {inStock && product.stock <= 5 && (
+          <span className="absolute top-3 left-3 text-xs font-semibold bg-orange-500 text-white px-2.5 py-1 rounded-full">
+            ¡Últimas unidades!
+          </span>
         )}
       </div>
 
-      {/* Contenido de la Tarjeta */}
-      <div className="p-4">
-        {/* Nombre del Producto */}
-        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+      {/* Card Body */}
+      <div className="p-5">
+        <h3 className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug group-hover:text-slate-600 transition-colors">
           {product.name}
         </h3>
 
-        {/* Descripción */}
-        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+        <p className="text-xs text-slate-500 mt-2 line-clamp-1">
           {product.description}
         </p>
 
-        {/* Precio y Stock */}
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-2xl font-bold text-blue-600">
+          <span className="text-lg font-bold text-slate-900">
             {formatPrice(product.price)}
           </span>
           <span
-            className={`text-sm font-medium px-2 py-1 rounded ${
+            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
               inStock
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
+                ? 'bg-emerald-50 text-emerald-700'
+                : 'bg-red-50 text-red-700'
             }`}
           >
-            {inStock ? `En stock (${product.stock})` : 'Agotado'}
+            {inStock ? 'En stock' : 'Agotado'}
+          </span>
+        </div>
+
+        {/* CTA hover reveal */}
+        <div className="mt-4 overflow-hidden max-h-0 group-hover:max-h-12 transition-all duration-300">
+          <span className="block text-center text-xs font-semibold text-slate-900 bg-slate-100 rounded-lg py-2.5">
+            Ver producto →
           </span>
         </div>
       </div>

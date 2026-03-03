@@ -35,115 +35,115 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Encabezado */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Bienvenido de Nuevo</h1>
-          <p className="text-gray-600">Inicia sesión en tu cuenta</p>
-        </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Top bar */}
+      <div className="bg-white border-b border-slate-200 px-4 py-4 flex items-center justify-between">
+        <a href="/" className="flex items-center gap-2 text-slate-900 font-bold text-lg">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          ShopNow
+        </a>
+        <span className="text-sm text-slate-500">
+          ¿Sin cuenta?{' '}
+          <a href="/register" className="font-semibold text-slate-900 hover:underline">Regístrate</a>
+        </span>
+      </div>
 
-        {/* Tarjeta */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          {/* Alerta de Error */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Formulario */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Campo Correo Electrónico */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                Dirección de Correo Electrónico
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                {...register('email', {
-                  required: 'El correo electrónico es requerido',
-                  pattern: {
-                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    message: 'Por favor ingresa un correo electrónico válido',
-                  },
-                })}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-              )}
-            </div>
-
-            {/* Campo Contraseña */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                {...register('password', {
-                  required: 'La contraseña es requerida',
-                  minLength: {
-                    value: 6,
-                    message: 'La contraseña debe tener al menos 6 caracteres',
-                  },
-                })}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
-              )}
-            </div>
-
-            {/* Botón Enviar */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-                  Iniciando sesión...
-                </span>
-              ) : (
-                'Iniciar Sesión'
-              )}
-            </button>
-          </form>
-
-          {/* Divisor */}
-          <div className="my-6 flex items-center">
-            <div className="flex-1 border-t border-gray-300"></div>
-            <span className="px-3 text-sm text-gray-500">¿Eres nuevo usuario?</span>
-            <div className="flex-1 border-t border-gray-300"></div>
+      {/* Main */}
+      <div className="flex-1 flex items-center justify-center px-4 py-16">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-extrabold text-slate-900 mb-3">Bienvenido de nuevo</h1>
+            <p className="text-slate-500 text-sm">Ingresa a tu cuenta para continuar</p>
           </div>
 
-          {/* Enlace de Registro */}
-          <Link
-            to="/register"
-            className="w-full block text-center bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg transition duration-200"
-          >
-            Crear una Cuenta
-          </Link>
-        </div>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-card p-8">
+            {/* Error alert */}
+            {error && (
+              <div className="mb-6 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
 
-        {/* Pie */}
-        <p className="text-center text-gray-600 text-sm mt-6">
-          ¿Tienes problemas?{' '}
-          <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
-            Obtener ayuda
-          </a>
-        </p>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+                  Correo electrónico
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  {...register('email', {
+                    required: 'El correo electrónico es requerido',
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Ingresa un correo electrónico válido',
+                    },
+                  })}
+                  className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent focus:bg-white transition ${
+                    errors.email ? 'border-red-400 bg-red-50' : 'border-slate-200'
+                  }`}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1.5">{errors.email.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
+                  Contraseña
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  {...register('password', {
+                    required: 'La contraseña es requerida',
+                    minLength: {
+                      value: 6,
+                      message: 'Mínimo 6 caracteres',
+                    },
+                  })}
+                  className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent focus:bg-white transition ${
+                    errors.password ? 'border-red-400 bg-red-50' : 'border-slate-200'
+                  }`}
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1.5">{errors.password.message}</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-slate-900 hover:bg-slate-700 disabled:bg-slate-400 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm mt-2"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></span>
+                    Iniciando sesión…
+                  </span>
+                ) : (
+                  'Iniciar Sesión'
+                )}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+              <p className="text-sm text-slate-500">
+                ¿Nuevo usuario?{' '}
+                <Link to="/register" className="font-semibold text-slate-900 hover:underline">
+                  Crear una cuenta
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
