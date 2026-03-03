@@ -23,37 +23,43 @@ export const initCartItemModel = (sequelize: Sequelize): typeof CartItem => {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
+        field: "Id"
       },
       userId: {
         type: DataTypes.STRING(450),
-        allowNull: false
+        allowNull: false,
+        field: "UserId"
       },
       productId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        field: "ProductId"
       },
       quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
         validate: {
           min: 1
-        }
+        },
+        field: "Quantity"
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: "CreatedAt"
       },
       updatedAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: "UpdatedAt"
       }
     },
     {
       sequelize,
-      tableName: "cart_items",
+      tableName: "CartItems",
       modelName: "CartItem",
       timestamps: false,
       indexes: [{ unique: true, fields: ["userId", "productId"] }]

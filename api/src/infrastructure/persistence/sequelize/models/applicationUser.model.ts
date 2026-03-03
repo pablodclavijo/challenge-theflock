@@ -23,39 +23,46 @@ export const initApplicationUserModel = (sequelize: Sequelize): typeof Applicati
       id: {
         type: DataTypes.STRING(450),
         allowNull: false,
-        primaryKey: true
+        primaryKey: true,
+        field: "Id"
       },
       fullName: {
         type: DataTypes.STRING(200),
-        allowNull: false
+        allowNull: false,
+        field: "FullName"
       },
       email: {
         type: DataTypes.STRING(256),
         allowNull: false,
-        unique: true
+        unique: true,
+        field: "Email"
       },
       passwordHash: {
         type: DataTypes.TEXT,
-        allowNull: false
+        allowNull: false,
+        field: "PasswordHash"
       },
       shippingAddress: {
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
+        field: "ShippingAddress"
       },
       isActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: true
+        defaultValue: true,
+        field: "IsActive"
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: "CreatedAt"
       }
     },
     {
       sequelize,
-      tableName: "application_users",
+      tableName: "ApplicationUsers",
       modelName: "ApplicationUser",
       timestamps: false
     }

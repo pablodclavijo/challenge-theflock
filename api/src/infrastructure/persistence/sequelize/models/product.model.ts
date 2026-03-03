@@ -27,51 +27,61 @@ export const initProductModel = (sequelize: Sequelize): typeof Product => {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
+        field: "Id"
       },
       name: {
         type: DataTypes.STRING(180),
-        allowNull: false
+        allowNull: false,
+        field: "Name"
       },
       description: {
         type: DataTypes.TEXT,
-        allowNull: false
+        allowNull: false,
+        field: "Description"
       },
       price: {
         type: DataTypes.DECIMAL(12, 2),
-        allowNull: false
+        allowNull: false,
+        field: "Price"
       },
       stock: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        field: "Stock"
       },
       categoryId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        field: "CategoryId"
       },
       imageUrl: {
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
+        field: "ImageUrl"
       },
       isActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: true
+        defaultValue: true,
+        field: "IsActive"
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: "CreatedAt"
       },
       updatedAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: "UpdatedAt"
       }
     },
     {
       sequelize,
-      tableName: "products",
+      tableName: "Products",
       modelName: "Product",
       timestamps: false
     }

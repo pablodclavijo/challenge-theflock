@@ -24,39 +24,46 @@ export const initOrderItemModel = (sequelize: Sequelize): typeof OrderItem => {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
+        field: "Id"
       },
       orderId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        field: "OrderId"
       },
       productId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        field: "ProductId"
       },
       productNameSnapshot: {
         type: DataTypes.STRING(180),
-        allowNull: false
+        allowNull: false,
+        field: "ProductNameSnapshot"
       },
       unitPriceSnapshot: {
         type: DataTypes.DECIMAL(12, 2),
-        allowNull: false
+        allowNull: false,
+        field: "UnitPriceSnapshot"
       },
       quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
         validate: {
           min: 1
-        }
+        },
+        field: "Quantity"
       },
       lineTotal: {
         type: DataTypes.DECIMAL(12, 2),
-        allowNull: false
+        allowNull: false,
+        field: "LineTotal"
       }
     },
     {
       sequelize,
-      tableName: "order_items",
+      tableName: "OrderItems",
       modelName: "OrderItem",
       timestamps: false
     }

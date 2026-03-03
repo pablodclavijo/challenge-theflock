@@ -20,23 +20,23 @@ export const initModels = (sequelize: Sequelize): void => {
   initAspNetRoleModel(sequelize);
   initAspNetUserRoleModel(sequelize);
 
-  Category.hasMany(Product, { foreignKey: "categoryId", as: "products" });
-  Product.belongsTo(Category, { foreignKey: "categoryId", as: "category" });
+  Category.hasMany(Product, { foreignKey: "CategoryId", as: "products" });
+  Product.belongsTo(Category, { foreignKey: "CategoryId", as: "category" });
 
-  ApplicationUser.hasMany(CartItem, { foreignKey: "userId", as: "cartItems" });
-  CartItem.belongsTo(ApplicationUser, { foreignKey: "userId", as: "user" });
+  ApplicationUser.hasMany(CartItem, { foreignKey: "UserId", as: "cartItems" });
+  CartItem.belongsTo(ApplicationUser, { foreignKey: "UserId", as: "user" });
 
-  Product.hasMany(CartItem, { foreignKey: "productId", as: "cartItems" });
-  CartItem.belongsTo(Product, { foreignKey: "productId", as: "product" });
+  Product.hasMany(CartItem, { foreignKey: "ProductId", as: "cartItems" });
+  CartItem.belongsTo(Product, { foreignKey: "ProductId", as: "product" });
 
-  ApplicationUser.hasMany(Order, { foreignKey: "userId", as: "orders" });
-  Order.belongsTo(ApplicationUser, { foreignKey: "userId", as: "user" });
+  ApplicationUser.hasMany(Order, { foreignKey: "UserId", as: "orders" });
+  Order.belongsTo(ApplicationUser, { foreignKey: "UserId", as: "user" });
 
-  Order.hasMany(OrderItem, { foreignKey: "orderId", as: "items" });
-  OrderItem.belongsTo(Order, { foreignKey: "orderId", as: "order" });
+  Order.hasMany(OrderItem, { foreignKey: "OrderId", as: "items" });
+  OrderItem.belongsTo(Order, { foreignKey: "OrderId", as: "order" });
 
-  Product.hasMany(OrderItem, { foreignKey: "productId", as: "orderItems" });
-  OrderItem.belongsTo(Product, { foreignKey: "productId", as: "product" });
+  Product.hasMany(OrderItem, { foreignKey: "ProductId", as: "orderItems" });
+  OrderItem.belongsTo(Product, { foreignKey: "ProductId", as: "product" });
 
   // ASP.NET Identity associations
   AspNetUser.belongsToMany(AspNetRole, {

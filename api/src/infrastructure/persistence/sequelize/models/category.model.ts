@@ -21,27 +21,31 @@ export const initCategoryModel = (sequelize: Sequelize): typeof Category => {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
+        field: "Id"
       },
       name: {
         type: DataTypes.STRING(120),
         allowNull: false,
-        unique: true
+        unique: true,
+        field: "Name"
       },
       isActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: true
+        defaultValue: true,
+        field: "IsActive"
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: "CreatedAt"
       }
     },
     {
       sequelize,
-      tableName: "categories",
+      tableName: "Categories",
       modelName: "Category",
       timestamps: false
     }

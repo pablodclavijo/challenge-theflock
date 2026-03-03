@@ -27,47 +27,56 @@ export const initOrderModel = (sequelize: Sequelize): typeof Order => {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
+        field: "Id"
       },
       userId: {
         type: DataTypes.STRING(450),
-        allowNull: false
+        allowNull: false,
+        field: "UserId"
       },
       status: {
         type: DataTypes.ENUM(...Object.values(OrderStatus)),
         allowNull: false,
-        defaultValue: OrderStatus.Pending
+        defaultValue: OrderStatus.Pending,
+        field: "Status"
       },
       subtotal: {
         type: DataTypes.DECIMAL(12, 2),
-        allowNull: false
+        allowNull: false,
+        field: "Subtotal"
       },
       tax: {
         type: DataTypes.DECIMAL(12, 2),
-        allowNull: false
+        allowNull: false,
+        field: "Tax"
       },
       total: {
         type: DataTypes.DECIMAL(12, 2),
-        allowNull: false
+        allowNull: false,
+        field: "Total"
       },
       shippingAddress: {
         type: DataTypes.TEXT,
-        allowNull: false
+        allowNull: false,
+        field: "ShippingAddress"
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: "CreatedAt"
       },
       updatedAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: "UpdatedAt"
       }
     },
     {
       sequelize,
-      tableName: "orders",
+      tableName: "Orders",
       modelName: "Order",
       timestamps: false
     }
