@@ -19,6 +19,7 @@ import type { Category } from "../types/product";
 import { useCart } from "../contexts/CartContext";
 import { useAuthContext } from "../contexts/AuthContext";
 import { CartSheet } from "../components/ui/CartSheet";
+import { ThemeToggle } from "../components/ui/theme-toggle";
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -94,6 +95,7 @@ export function ProductDetailPage() {
               <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
             </Link>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <CartSheet />
               <Link to="/dashboard">
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">

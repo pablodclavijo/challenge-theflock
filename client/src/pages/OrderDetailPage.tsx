@@ -14,6 +14,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { apiClient } from "../services/api";
+import { ThemeToggle } from "../components/ui/theme-toggle";
 import { useAuthContext } from "../contexts/AuthContext";
 import type { Order, PaymentResult } from "../types/order";
 import { isPaymentApproved, normalizeOrderStatus } from "../types/order";
@@ -133,6 +134,7 @@ export function OrderDetailPage() {
           >
             <RefreshCw className="h-4 w-4" />
           </button>
+          <ThemeToggle />
         </div>
       </header>
 

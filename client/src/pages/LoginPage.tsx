@@ -52,12 +52,15 @@ export function LoginPage() {
             <ShoppingBag className="h-5 w-5 text-accent" />
             <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
           </div>
-          <span className="text-sm text-muted-foreground">
-            {"No tienes cuenta? "}
-            <Link to="/register" className="font-semibold text-foreground hover:text-accent transition-colors">
-              Registrate
-            </Link>
-          </span>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <span className="text-sm text-muted-foreground">
+              {"No tienes cuenta? "}
+              <Link to="/register" className="font-semibold text-foreground hover:text-accent transition-colors">
+                Registrate
+              </Link>
+            </span>
+          </div>
         </div>
       </header>
 

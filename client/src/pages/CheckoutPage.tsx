@@ -18,6 +18,7 @@ import {
 import { useCart } from "../contexts/CartContext";
 import { useAuthContext } from "../contexts/AuthContext";
 import { apiClient } from "../services/api";
+import { ThemeToggle } from "../components/ui/theme-toggle";
 import { TAX_RATE } from "../lib/constants";
 import type { Order, PaymentResult } from "../types/order";
 import { isPaymentApproved } from "../types/order";
@@ -157,7 +158,10 @@ export function CheckoutPage() {
             <div />
           )}
           <h1 className="font-serif text-lg font-semibold text-foreground">Checkout</h1>
-          <StepIndicator current={step} />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <StepIndicator current={step} />
+          </div>
         </div>
       </header>
 

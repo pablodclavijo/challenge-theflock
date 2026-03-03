@@ -41,12 +41,15 @@ export function RegisterPage() {
             <ShoppingBag className="h-5 w-5 text-accent" />
             <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
           </div>
-          <span className="text-sm text-muted-foreground">
-            {"Ya tienes cuenta? "}
-            <span className="font-semibold text-foreground hover:text-accent transition-colors cursor-pointer">
-              Inicia sesion
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <span className="text-sm text-muted-foreground">
+              {"Ya tienes cuenta? "}
+              <span className="font-semibold text-foreground hover:text-accent transition-colors cursor-pointer">
+                Inicia sesion
+              </span>
             </span>
-          </span>
+          </div>
         </div>
       </header>
 

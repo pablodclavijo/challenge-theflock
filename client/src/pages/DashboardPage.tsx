@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "../services/api";
 import { useAuthContext } from "../contexts/AuthContext";
+import { ThemeToggle } from "../components/ui/theme-toggle";
 
 export function DashboardPage() {
   const { user, logout } = useAuthContext();
@@ -68,6 +69,7 @@ export function DashboardPage() {
               <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Colecciones</span>
             </nav>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <span className="relative cursor-pointer">
                 <ShoppingCart className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
                 {cartCount > 0 && (
@@ -253,12 +255,6 @@ export function DashboardPage() {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* CTA banner */}
-            <div className="bg-primary rounded-2xl p-10 text-center text-primary-foreground">
-              <p className="font-serif text-lg font-bold mb-2">Mas funciones proximamente</p>
-              <p className="text-primary-foreground/50 text-sm">Gestion de pedidos, lista de deseos y mucho mas.</p>
             </div>
           </div>
         </div>

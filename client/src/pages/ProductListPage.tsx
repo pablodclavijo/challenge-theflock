@@ -16,6 +16,7 @@ import { apiClient } from "../services/api";
 import type { Product, Category, ProductListResponse } from "../types/product";
 import { CartSheet } from "../components/ui/CartSheet";
 import { useCart } from "../contexts/CartContext";
+import { ThemeToggle } from "../components/ui/theme-toggle";
 
 const PAGE_SIZE = 12;
 
@@ -104,6 +105,7 @@ export function ProductListPage() {
               <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Nosotros</span>
             </nav>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <CartSheet />
               <Link to="/dashboard">
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
