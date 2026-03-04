@@ -605,6 +605,4 @@ Este proyecto fue desarrollado como parte del challenge técnico para The Flock.
 Pablo D. Clavijo
 - GitHub: [@pablodclavijo](https://github.com/pablodclavijo)
 
----
 
-**¡Feliz desarrollo! 🚀**
