@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft, Code2, ShoppingBag } from "lucide-react";
+import { ArrowLeft,  ShoppingBag } from "lucide-react";
 import { useGoBack } from "../hooks";
 
 export function NosotrosPage() {

@@ -9,6 +9,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OrderDetailPage } from '../pages/OrderDetailPage';
 import { OrderStatus } from '../types/order';
 
@@ -70,10 +71,19 @@ const PAYMENT_REJECTED = {
 };
 
 function renderDetail() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
   return render(
-    <MemoryRouter>
-      <OrderDetailPage />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <OrderDetailPage />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
@@ -224,7 +234,7 @@ describe('retry payment — approved', () => {
     await waitFor(() => screen.getByRole('button', { name: /reintentar pago/i }));
     await user.click(screen.getByRole('button', { name: /reintentar pago/i }));
     await waitFor(() =>
-      expect(screen.getByText(PAYMENT_APPROVED.message)).toBeInTheDocument()
+      expect(screen.getByText(/¡Pago aprobado exitosamente!/i)).toBeInTheDocument()
     );
   });
 

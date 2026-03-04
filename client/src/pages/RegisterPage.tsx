@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { ShoppingBag, ArrowRight, Eye, EyeOff, Check } from "lucide-react";
-
+import { ThemeToggle
+  
+ } from "@/components/ui/theme-toggle";
 export function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
