@@ -13,6 +13,7 @@ import { getImageUrl } from "../../lib/utils";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -77,6 +78,9 @@ export function CartSheet() {
               </span>
             )}
           </SheetTitle>
+          <SheetDescription>
+            Revisa tus artículos y procede al checkout cuando estés listo.
+          </SheetDescription>
         </SheetHeader>
 
         {/* Empty state */}

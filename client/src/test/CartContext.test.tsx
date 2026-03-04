@@ -17,6 +17,24 @@ vi.mock('../services/api');
 
 const mockApiClient = api.apiClient as any;
 
+// Mock AuthContext to provide isAuthenticated = true by default
+let mockIsAuthenticated = true;
+let mockToken: string | null = 'test-token';
+vi.mock('../contexts/AuthContext', () => ({
+  useAuthContext: () => ({ 
+    isAuthenticated: mockIsAuthenticated,
+    user: null,
+  }),
+}));
+
+vi.mock('../utils/auth', () => ({
+  tokenUtils: {
+    getToken: () => mockToken,
+    setToken: (token: string) => { mockToken = token; },
+    removeToken: () => { mockToken = null; },
+  },
+}));
+
 // ─── helper ──────────────────────────────────────────────────────────────────
 const wrapper = ({ children }: { children: ReactNode }) => (
   <CartProvider>{children}</CartProvider>

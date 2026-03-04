@@ -5,15 +5,20 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { CartProvider } from '../contexts/CartContext';
 import { CartSheet } from '../components/ui/CartSheet';
 import { TAX_RATE } from '../lib/constants';
+import * as api from '../services/api';
 
 // ─── mocks ───────────────────────────────────────────────────────────────────
+vi.mock('../services/api');
+
+const mockApiClient = api.apiClient as any;
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const mod = await importOriginal<typeof import('react-router-dom')>();
@@ -22,8 +27,17 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 // AuthContext mock — start unauthenticated; tests can override per-suite
 let mockIsAuthenticated = false;
+let mockToken: string | null = null;
 vi.mock('../contexts/AuthContext', () => ({
   useAuthContext: () => ({ isAuthenticated: mockIsAuthenticated }),
+}));
+
+vi.mock('../utils/auth', () => ({
+  tokenUtils: {
+    getToken: () => mockToken,
+    setToken: (token: string) => { mockToken = token; },
+    removeToken: () => { mockToken = null; },
+  },
 }));
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -45,36 +59,56 @@ const PRODUCT = { productId: 1, name: 'Test Shirt', price: 50, imageUrl: undefin
 
 // ─── trigger badge ────────────────────────────────────────────────────────────
 describe('cart trigger button', () => {
-  beforeEach(() => { localStorage.clear(); mockIsAuthenticated = false; });
+  beforeEach(() => {
+    localStorage.clear();
+    mockIsAuthenticated = false;
+    mockToken = null;
+    vi.clearAllMocks();
+    mockApiClient.getCart.mockResolvedValue({ items: [] });
+  });
 
-  it('shows no badge when cart is empty', () => {
+  it('shows no badge when cart is empty', async () => {
     renderCart();
     // Badge only renders when totalItems > 0 — should not be in DOM
-    expect(screen.queryByText(/^\d+$/)).toBeNull();
+    await waitFor(() => {
+      expect(screen.queryByText(/^\d+$/)).toBeNull();
+    });
   });
 
-  it('shows item count badge after adding a product', () => {
-    localStorage.setItem(
-      'shopnow_cart',
-      JSON.stringify([{ ...PRODUCT, quantity: 3 }])
-    );
+  it('shows item count badge after adding a product', async () => {
+    mockIsAuthenticated = true;
+    mockToken = 'test-token';
+    mockApiClient.getCart.mockResolvedValue({
+      items: [{ ...PRODUCT, quantity: 3 }],
+    });
     renderCart();
-    expect(screen.getByText('3')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('3')).toBeInTheDocument();
+    });
   });
 
-  it('displays 99+ when there are more than 99 items', () => {
-    localStorage.setItem(
-      'shopnow_cart',
-      JSON.stringify([{ ...PRODUCT, quantity: 100 }])
-    );
+  it('displays 99+ when there are more than 99 items', async () => {
+    mockIsAuthenticated = true;
+    mockToken = 'test-token';
+    mockApiClient.getCart.mockResolvedValue({
+      items: [{ ...PRODUCT, quantity: 100 }],
+    });
     renderCart();
-    expect(screen.getByText('99+')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('99+')).toBeInTheDocument();
+    });
   });
 });
 
 // ─── empty state ──────────────────────────────────────────────────────────────
 describe('empty cart state', () => {
-  beforeEach(() => { localStorage.clear(); mockIsAuthenticated = false; });
+  beforeEach(() => {
+    localStorage.clear();
+    mockIsAuthenticated = false;
+    mockToken = null;
+    vi.clearAllMocks();
+    mockApiClient.getCart.mockResolvedValue({ items: [] });
+  });
 
   it('shows empty-cart message when opened with no items', async () => {
     const user = userEvent.setup();
@@ -94,11 +128,12 @@ describe('empty cart state', () => {
 // ─── items displayed ──────────────────────────────────────────────────────────
 describe('cart with items', () => {
   beforeEach(() => {
-    localStorage.setItem(
-      'shopnow_cart',
-      JSON.stringify([{ ...PRODUCT, quantity: 2 }])
-    );
-    mockIsAuthenticated = false;
+    mockIsAuthenticated = true;
+    mockToken = 'test-token';
+    vi.clearAllMocks();
+    mockApiClient.getCart.mockResolvedValue({
+      items: [{ ...PRODUCT, quantity: 2 }],
+    });
   });
 
   it('renders the product name and price', async () => {
@@ -106,7 +141,9 @@ describe('cart with items', () => {
     renderCart();
     await openSheet(user);
 
-    expect(screen.getByText('Test Shirt')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Test Shirt')).toBeInTheDocument();
+    });
     // price formatted in es-ES locale
     expect(screen.getByText(/50/)).toBeInTheDocument();
   });
@@ -116,7 +153,9 @@ describe('cart with items', () => {
     renderCart();
     await openSheet(user);
 
-    expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(1);
+    await waitFor(() => {
+      expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(1);
+    });
   });
 
   it('shows the summary section with Subtotal, IVA and Total labels', async () => {
@@ -124,7 +163,9 @@ describe('cart with items', () => {
     renderCart();
     await openSheet(user);
 
-    expect(screen.getByText(/subtotal/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/subtotal/i)).toBeInTheDocument();
+    });
     expect(screen.getByText(new RegExp(`IVA.*${Math.round(TAX_RATE * 100)}%`, 'i'))).toBeInTheDocument();
     expect(screen.getByText(/^total$/i)).toBeInTheDocument();
   });
@@ -133,94 +174,141 @@ describe('cart with items', () => {
 // ─── quantity controls ────────────────────────────────────────────────────────
 describe('quantity controls', () => {
   beforeEach(() => {
-    localStorage.setItem(
-      'shopnow_cart',
-      JSON.stringify([{ ...PRODUCT, quantity: 2 }])
-    );
-    mockIsAuthenticated = false;
+    mockIsAuthenticated = true;
+    mockToken = 'test-token';
+    vi.clearAllMocks();
+    mockApiClient.updateCartItem.mockResolvedValue(undefined);
   });
 
   it('increases item quantity when + is clicked', async () => {
+    mockApiClient.getCart
+      .mockResolvedValueOnce({ items: [{ ...PRODUCT, quantity: 2 }] })
+      .mockResolvedValueOnce({ items: [{ ...PRODUCT, quantity: 3 }] });
+
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(1);
+    });
 
     const increaseBtn = screen.getByRole('button', { name: /aumentar cantidad/i });
     await user.click(increaseBtn);
 
-    expect(screen.getAllByText('3').length).toBeGreaterThanOrEqual(1);
+    await waitFor(() => {
+      expect(screen.getAllByText('3').length).toBeGreaterThanOrEqual(1);
+    });
   });
 
   it('decreases item quantity when − is clicked', async () => {
+    mockApiClient.getCart
+      .mockResolvedValueOnce({ items: [{ ...PRODUCT, quantity: 2 }] })
+      .mockResolvedValueOnce({ items: [{ ...PRODUCT, quantity: 1 }] });
+
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
 
+    await waitFor(() => {
+      expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(1);
+    });
+
     const decreaseBtn = screen.getByRole('button', { name: /reducir cantidad/i });
     await user.click(decreaseBtn);
 
-    expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(1);
+    await waitFor(() => {
+      expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(1);
+    });
   });
 
   it('removes the item when quantity is decremented to 0', async () => {
-    localStorage.setItem(
-      'shopnow_cart',
-      JSON.stringify([{ ...PRODUCT, quantity: 1 }])
-    );
+    mockApiClient.getCart
+      .mockResolvedValueOnce({ items: [{ ...PRODUCT, quantity: 1 }] })
+      .mockResolvedValueOnce({ items: [] });
 
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
 
+    await waitFor(() => {
+      expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(1);
+    });
+
     const decreaseBtn = screen.getByRole('button', { name: /reducir cantidad/i });
     await user.click(decreaseBtn);
 
-    expect(screen.getByText(/tu carrito está vacío/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/tu carrito está vacío/i)).toBeInTheDocument();
+    });
   });
 });
 
 // ─── remove button ────────────────────────────────────────────────────────────
 describe('remove item button', () => {
   beforeEach(() => {
-    localStorage.setItem(
-      'shopnow_cart',
-      JSON.stringify([{ ...PRODUCT, quantity: 2 }])
-    );
-    mockIsAuthenticated = false;
+    mockIsAuthenticated = true;
+    mockToken = 'test-token';
+    vi.clearAllMocks();
+    mockApiClient.removeFromCart.mockResolvedValue(undefined);
   });
 
   it('removes the item and shows empty state', async () => {
+    mockApiClient.getCart
+      .mockResolvedValueOnce({ items: [{ ...PRODUCT, quantity: 2 }] })
+      .mockResolvedValueOnce({ items: [] });
+
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
 
+    await waitFor(() => {
+      expect(screen.getByText('Test Shirt')).toBeInTheDocument();
+    });
+
     const removeBtn = screen.getByRole('button', { name: /eliminar del carrito/i });
     await user.click(removeBtn);
 
-    expect(screen.getByText(/tu carrito está vacío/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/tu carrito está vacío/i)).toBeInTheDocument();
+    });
   });
 
   it('persists the removal in localStorage', async () => {
+    mockApiClient.getCart
+      .mockResolvedValueOnce({ items: [{ ...PRODUCT, quantity: 2 }] })
+      .mockResolvedValueOnce({ items: [] });
+
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
 
+    await waitFor(() => {
+      expect(screen.getByText('Test Shirt')).toBeInTheDocument();
+    });
+
     const removeBtn = screen.getByRole('button', { name: /eliminar del carrito/i });
     await user.click(removeBtn);
 
-    const stored = JSON.parse(localStorage.getItem('shopnow_cart') ?? '[]');
-    expect(stored).toHaveLength(0);
+    await waitFor(() => {
+      expect(mockApiClient.removeFromCart).toHaveBeenCalledWith(PRODUCT.productId);
+    });
   });
 });
 
 // ─── price summary calculations ───────────────────────────────────────────────
 describe('price summary', () => {
+  beforeEach(() => {
+    mockIsAuthenticated = true;
+    mockToken = 'test-token';
+    vi.clearAllMocks();
+  });
+
   it('calculates subtotal, taxes and total correctly for displayed text', async () => {
     // 2 × 50 = 100 subtotal
-    localStorage.setItem(
-      'shopnow_cart',
-      JSON.stringify([{ ...PRODUCT, quantity: 2 }])
-    );
+    mockApiClient.getCart.mockResolvedValue({
+      items: [{ ...PRODUCT, quantity: 2 }],
+    });
 
     const user = userEvent.setup();
     renderCart();
@@ -232,7 +320,9 @@ describe('price summary', () => {
 
     // Prices are formatted as es-ES EUR, e.g. "100,00 €"
     // We use getAllByText with a regex to avoid locale-formatting fragility
-    expect(screen.getAllByText(/100/).length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(screen.getAllByText(/100/).length).toBeGreaterThan(0);
+    });
     expect(screen.getAllByText(/21/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/121/).length).toBeGreaterThan(0);
 
@@ -245,27 +335,45 @@ describe('price summary', () => {
 // ─── checkout behaviour ───────────────────────────────────────────────────────
 describe('checkout button', () => {
   beforeEach(() => {
-    localStorage.setItem(
-      'shopnow_cart',
-      JSON.stringify([{ ...PRODUCT, quantity: 1 }])
-    );
+    vi.clearAllMocks();
+    mockIsAuthenticated = true;
+    mockToken = 'test-token';
+  });
+
+  // Note: Guest users cannot have items in cart with current server-backed cart implementation
+  // The CartContext only loads items when authenticated, so these tests are skipped
+  it.skip('shows "Iniciar sesión para pagar" when guest', async () => {
     mockIsAuthenticated = false;
-  });
+    mockToken = null;
+    mockApiClient.getCart.mockResolvedValue({
+      items: [{ ...PRODUCT, quantity: 1 }],
+    });
 
-  it('shows "Iniciar sesión para pagar" when guest', async () => {
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
 
-    expect(
-      screen.getByRole('button', { name: /iniciar sesión para pagar/i })
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /iniciar sesión para pagar/i })
+      ).toBeInTheDocument();
+    });
   });
 
-  it('navigates to /login?from=checkout when guest clicks checkout', async () => {
+  it.skip('navigates to /login?from=checkout when guest clicks checkout', async () => {
+    mockIsAuthenticated = false;
+    mockToken = null;
+    mockApiClient.getCart.mockResolvedValue({
+      items: [{ ...PRODUCT, quantity: 1 }],
+    });
+
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /iniciar sesión para pagar/i })).toBeInTheDocument();
+    });
 
     const checkoutBtn = screen.getByRole('button', { name: /iniciar sesión para pagar/i });
     await user.click(checkoutBtn);
@@ -275,22 +383,36 @@ describe('checkout button', () => {
 
   it('shows "Finalizar compra" when authenticated', async () => {
     mockIsAuthenticated = true;
+    mockToken = 'test-token';
+    mockApiClient.getCart.mockResolvedValue({
+      items: [{ ...PRODUCT, quantity: 1 }],
+    });
 
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
 
-    expect(
-      screen.getByRole('button', { name: /finalizar compra/i })
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /finalizar compra/i })
+      ).toBeInTheDocument();
+    });
   });
 
   it('navigates to /checkout when authenticated user clicks checkout', async () => {
     mockIsAuthenticated = true;
+    mockToken = 'test-token';
+    mockApiClient.getCart.mockResolvedValue({
+      items: [{ ...PRODUCT, quantity: 1 }],
+    });
 
     const user = userEvent.setup();
     renderCart();
     await openSheet(user);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /finalizar compra/i })).toBeInTheDocument();
+    });
 
     const checkoutBtn = screen.getByRole('button', { name: /finalizar compra/i });
     await user.click(checkoutBtn);

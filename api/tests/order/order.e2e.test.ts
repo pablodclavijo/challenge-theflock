@@ -63,6 +63,22 @@ jest.mock(
   })
 );
 
+jest.mock(
+  "../../src/infrastructure/persistence/sequelize/models/product.model",
+  () => ({
+    Product: {
+      decrement: jest.fn(),
+      sequelize: {
+        transaction: jest.fn(() => Promise.resolve({
+          commit: jest.fn(),
+          rollback: jest.fn()
+        }))
+      },
+      init: jest.fn()
+    }
+  })
+);
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Mock payment service
 // ──────────────────────────────────────────────────────────────────────────────
@@ -90,6 +106,7 @@ jest.mock(
 import { CartItem } from "../../src/infrastructure/persistence/sequelize/models/cartItem.model";
 import { Order } from "../../src/infrastructure/persistence/sequelize/models/order.model";
 import { OrderItem } from "../../src/infrastructure/persistence/sequelize/models/orderItem.model";
+import { Product } from "../../src/infrastructure/persistence/sequelize/models/product.model";
 import { MockPaymentService } from "../../src/infrastructure/services/mock-payment.service";
 import { AspNetRole } from "../../src/infrastructure/persistence/sequelize/models/aspNetRole.model";
 
@@ -101,6 +118,7 @@ const mockOrderFindByPk = Order.findByPk as jest.Mock;
 const mockOrderFindAndCount = Order.findAndCountAll as jest.Mock;
 const mockOrderUpdate = Order.update as jest.Mock;
 const mockOrderItemBulkCreate = OrderItem.bulkCreate as jest.Mock;
+const mockProductDecrement = Product.decrement as jest.Mock;
 
 // The order controller creates one MockPaymentService instance at module load time.
 // Capture the processPayment mock fn via mock.results before clearMocks runs.
