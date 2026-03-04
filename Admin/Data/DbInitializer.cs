@@ -171,67 +171,67 @@ namespace AdminPanel.Data
             var electronicsId = categories.First(c => c.Name == "Electrónica").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Laptop HP 15", Description = "Laptop HP con procesador Intel Core i5, 8GB RAM, 256GB SSD", Price = 799.99m, Stock = 15, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-50), UpdatedAt = now.AddDays(-50) },
-                new Product { Name = "Mouse Logitech MX Master 3", Description = "Mouse inalámbrico ergonómico de alta precisión", Price = 99.99m, Stock = 30, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-48), UpdatedAt = now.AddDays(-48) },
-                new Product { Name = "Teclado Mecánico Razer", Description = "Teclado mecánico RGB con switches Cherry MX", Price = 149.99m, Stock = 20, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-46), UpdatedAt = now.AddDays(-46) },
-                new Product { Name = "Monitor Samsung 27\"", Description = "Monitor Full HD 1920x1080, 75Hz, panel IPS", Price = 249.99m, Stock = 12, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-44), UpdatedAt = now.AddDays(-44) },
-                new Product { Name = "Auriculares Sony WH-1000XM4", Description = "Auriculares inalámbricos con cancelación de ruido", Price = 349.99m, Stock = 8, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-42), UpdatedAt = now.AddDays(-42) },
-                new Product { Name = "Webcam Logitech C920", Description = "Webcam Full HD 1080p para streaming", Price = 79.99m, Stock = 25, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-40), UpdatedAt = now.AddDays(-40) }
+                new Product { Name = "Laptop HP 15", Description = "Laptop HP con procesador Intel Core i5, 8GB RAM, 256GB SSD", Price = 799.99m, Stock = 15, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-50), UpdatedAt = now.AddDays(-50), ImageUrl = "/uploads/products/Laptop HP 15.webp" },
+                new Product { Name = "Mouse Logitech MX Master 3", Description = "Mouse inalámbrico ergonómico de alta precisión", Price = 99.99m, Stock = 30, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-48), UpdatedAt = now.AddDays(-48), ImageUrl = "/uploads/products/Mouse Logitech MX Master 3.webp" },
+                new Product { Name = "Teclado Mecánico Razer", Description = "Teclado mecánico RGB con switches Cherry MX", Price = 149.99m, Stock = 20, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-46), UpdatedAt = now.AddDays(-46), ImageUrl = "/uploads/products/Teclado Mecánico Razer.jpg" },
+                new Product { Name = "Monitor Samsung 27\"", Description = "Monitor Full HD 1920x1080, 75Hz, panel IPS", Price = 249.99m, Stock = 12, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-44), UpdatedAt = now.AddDays(-44), ImageUrl = "/uploads/products/Monitor Samsung 27.png" },
+                new Product { Name = "Auriculares Sony WH-1000XM4", Description = "Auriculares inalámbricos con cancelación de ruido", Price = 349.99m, Stock = 8, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-42), UpdatedAt = now.AddDays(-42), ImageUrl = "/uploads/products/Auriculares Sony WH-1000XM4.webp" },
+                new Product { Name = "Webcam Logitech C920", Description = "Webcam Full HD 1080p para streaming", Price = 79.99m, Stock = 25, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-40), UpdatedAt = now.AddDays(-40), ImageUrl = "/uploads/products/Webcam Logitech C920.webp" }
             });
 
             // Ropa y Moda (4 productos)
             var ropaId = categories.First(c => c.Name == "Ropa y Moda").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Camiseta Nike Deportiva", Description = "Camiseta de algodón 100% disponible en varios colores", Price = 29.99m, Stock = 50, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-38), UpdatedAt = now.AddDays(-38) },
-                new Product { Name = "Jeans Levi's 501", Description = "Jeans clásicos de corte recto, tela denim premium", Price = 89.99m, Stock = 35, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-36), UpdatedAt = now.AddDays(-36) },
-                new Product { Name = "Zapatillas Adidas Running", Description = "Zapatillas deportivas con tecnología Boost", Price = 129.99m, Stock = 28, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-34), UpdatedAt = now.AddDays(-34) },
-                new Product { Name = "Chaqueta North Face", Description = "Chaqueta impermeable para exteriores", Price = 199.99m, Stock = 18, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-32), UpdatedAt = now.AddDays(-32) }
+                new Product { Name = "Camiseta Nike Deportiva", Description = "Camiseta de algodón 100% disponible en varios colores", Price = 29.99m, Stock = 50, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-38), UpdatedAt = now.AddDays(-38), ImageUrl = "/uploads/products/Camiseta Nike Deportiva.jpg" },
+                new Product { Name = "Jeans Levi's 501", Description = "Jeans clásicos de corte recto, tela denim premium", Price = 89.99m, Stock = 35, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-36), UpdatedAt = now.AddDays(-36), ImageUrl = "/uploads/products/Jeans Levi's 501.avif" },
+                new Product { Name = "Zapatillas Adidas Running", Description = "Zapatillas deportivas con tecnología Boost", Price = 129.99m, Stock = 28, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-34), UpdatedAt = now.AddDays(-34), ImageUrl = "/uploads/products/Zapatillas Adidas Running.png" },
+                new Product { Name = "Chaqueta North Face", Description = "Chaqueta impermeable para exteriores", Price = 199.99m, Stock = 18, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-32), UpdatedAt = now.AddDays(-32), ImageUrl = "/uploads/products/Chaqueta North Face.jpg" }
             });
 
             // Hogar y Cocina (4 productos)
             var hogarId = categories.First(c => c.Name == "Hogar y Cocina").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Cafetera Nespresso", Description = "Cafetera de cápsulas con sistema de extracción de 19 bares", Price = 149.99m, Stock = 22, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-30), UpdatedAt = now.AddDays(-30) },
-                new Product { Name = "Licuadora Oster", Description = "Licuadora de 1200W con jarra de vidrio de 2L", Price = 79.99m, Stock = 30, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-28), UpdatedAt = now.AddDays(-28) },
-                new Product { Name = "Set de Ollas Tramontina", Description = "Set de 5 ollas de acero inoxidable", Price = 199.99m, Stock = 15, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-26), UpdatedAt = now.AddDays(-26) },
-                new Product { Name = "Aspiradora Robot Roomba", Description = "Aspiradora robot con mapeo inteligente y WiFi", Price = 399.99m, Stock = 10, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-24), UpdatedAt = now.AddDays(-24) }
+                new Product { Name = "Cafetera Nespresso", Description = "Cafetera de cápsulas con sistema de extracción de 19 bares", Price = 149.99m, Stock = 22, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-30), UpdatedAt = now.AddDays(-30), ImageUrl = "/uploads/products/Cafetera Nespresso.jpg" },
+                new Product { Name = "Licuadora Oster", Description = "Licuadora de 1200W con jarra de vidrio de 2L", Price = 79.99m, Stock = 30, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-28), UpdatedAt = now.AddDays(-28), ImageUrl = "/uploads/products/Licuadora Oster.webp" },
+                new Product { Name = "Set de Ollas Tramontina", Description = "Set de 5 ollas de acero inoxidable", Price = 199.99m, Stock = 15, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-26), UpdatedAt = now.AddDays(-26), ImageUrl = "/uploads/products/Set de Ollas Tramontina.jpg" },
+                new Product { Name = "Aspiradora Robot Roomba", Description = "Aspiradora robot con mapeo inteligente y WiFi", Price = 399.99m, Stock = 10, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-24), UpdatedAt = now.AddDays(-24), ImageUrl = "/uploads/products/Aspiradora Robot Roomba.jpg" }
             });
 
             // Deportes (3 productos)
             var deportesId = categories.First(c => c.Name == "Deportes").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Bicicleta de Montaña", Description = "Bicicleta MTB 21 velocidades, frenos de disco", Price = 499.99m, Stock = 8, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-22), UpdatedAt = now.AddDays(-22) },
-                new Product { Name = "Mancuernas Ajustables 20kg", Description = "Par de mancuernas ajustables de 5 a 20kg", Price = 149.99m, Stock = 20, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-20), UpdatedAt = now.AddDays(-20) },
-                new Product { Name = "Colchoneta de Yoga", Description = "Colchoneta antideslizante con bolsa de transporte", Price = 39.99m, Stock = 45, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-18), UpdatedAt = now.AddDays(-18) }
+                new Product { Name = "Bicicleta de Montaña", Description = "Bicicleta MTB 21 velocidades, frenos de disco", Price = 499.99m, Stock = 8, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-22), UpdatedAt = now.AddDays(-22), ImageUrl = "/uploads/products/Bicicleta de Montaña.jpg" },
+                new Product { Name = "Mancuernas Ajustables 20kg", Description = "Par de mancuernas ajustables de 5 a 20kg", Price = 149.99m, Stock = 20, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-20), UpdatedAt = now.AddDays(-20), ImageUrl = "/uploads/products/Mancuernas Ajustables 20kg.webp" },
+                new Product { Name = "Colchoneta de Yoga", Description = "Colchoneta antideslizante con bolsa de transporte", Price = 39.99m, Stock = 45, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-18), UpdatedAt = now.AddDays(-18), ImageUrl = "/uploads/products/Colchoneta de Yoga.jpg" }
             });
 
             // Libros (3 productos)
             var librosId = categories.First(c => c.Name == "Libros").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Clean Code - Robert Martin", Description = "Guía práctica de desarrollo de software ágil", Price = 49.99m, Stock = 25, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-16), UpdatedAt = now.AddDays(-16) },
-                new Product { Name = "El Principito", Description = "Clásico de la literatura universal, edición ilustrada", Price = 19.99m, Stock = 40, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-14), UpdatedAt = now.AddDays(-14) },
-                new Product { Name = "Cien Años de Soledad", Description = "Obra maestra de Gabriel García Márquez", Price = 29.99m, Stock = 35, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-12), UpdatedAt = now.AddDays(-12) }
+                new Product { Name = "Clean Code - Robert Martin", Description = "Guía práctica de desarrollo de software ágil", Price = 49.99m, Stock = 25, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-16), UpdatedAt = now.AddDays(-16), ImageUrl = "/uploads/products/Clean Code - Robert Martin.webp" },
+                new Product { Name = "El Principito", Description = "Clásico de la literatura universal, edición ilustrada", Price = 19.99m, Stock = 40, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-14), UpdatedAt = now.AddDays(-14), ImageUrl = "/uploads/products/El Principito.jpeg" },
+                new Product { Name = "Cien Años de Soledad", Description = "Obra maestra de Gabriel García Márquez", Price = 29.99m, Stock = 35, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-12), UpdatedAt = now.AddDays(-12), ImageUrl = "/uploads/products/Cien Años de Soledad.jpg" }
             });
 
             // Juguetes (2 productos)
             var juguetesId = categories.First(c => c.Name == "Juguetes").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "LEGO Star Wars Millennium Falcon", Description = "Set de construcción LEGO de 1351 piezas", Price = 159.99m, Stock = 12, CategoryId = juguetesId, IsActive = true, CreatedAt = now.AddDays(-10), UpdatedAt = now.AddDays(-10) },
-                new Product { Name = "Muñeca Barbie Dreamhouse", Description = "Casa de muñecas con 8 habitaciones y accesorios", Price = 199.99m, Stock = 10, CategoryId = juguetesId, IsActive = true, CreatedAt = now.AddDays(-8), UpdatedAt = now.AddDays(-8) }
+                new Product { Name = "LEGO Star Wars Millennium Falcon", Description = "Set de construcción LEGO de 1351 piezas", Price = 159.99m, Stock = 12, CategoryId = juguetesId, IsActive = true, CreatedAt = now.AddDays(-10), UpdatedAt = now.AddDays(-10), ImageUrl = "/uploads/products/LEGO Star Wars Millennium Falcon.jpg" },
+                new Product { Name = "Muñeca Barbie Dreamhouse", Description = "Casa de muñecas con 8 habitaciones y accesorios", Price = 199.99m, Stock = 10, CategoryId = juguetesId, IsActive = true, CreatedAt = now.AddDays(-8), UpdatedAt = now.AddDays(-8), ImageUrl = "/uploads/products/Muñeca Barbie Dreamhouse.jpg" }
             });
 
             // Belleza y Salud (3 productos)
             var bellezaId = categories.First(c => c.Name == "Belleza y Salud").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Perfume Chanel No. 5", Description = "Eau de Parfum 100ml, fragancia clásica", Price = 149.99m, Stock = 18, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-6), UpdatedAt = now.AddDays(-6) },
-                new Product { Name = "Kit de Cuidado Facial Neutrogena", Description = "Set completo de limpieza e hidratación facial", Price = 59.99m, Stock = 30, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-4), UpdatedAt = now.AddDays(-4) },
-                new Product { Name = "Cepillo Eléctrico Oral-B", Description = "Cepillo dental eléctrico recargable con temporizador", Price = 89.99m, Stock = 22, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-2), UpdatedAt = now.AddDays(-2) }
+                new Product { Name = "Perfume Chanel No. 5", Description = "Eau de Parfum 100ml, fragancia clásica", Price = 149.99m, Stock = 18, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-6), UpdatedAt = now.AddDays(-6), ImageUrl = "/uploads/products/Perfume Chanel No. 5.webp" },
+                new Product { Name = "Kit de Cuidado Facial Neutrogena", Description = "Set completo de limpieza e hidratación facial", Price = 59.99m, Stock = 30, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-4), UpdatedAt = now.AddDays(-4), ImageUrl = "/uploads/products/Kit de Cuidado Facial Neutrogena.webp" },
+                new Product { Name = "Cepillo Eléctrico Oral-B", Description = "Cepillo dental eléctrico recargable con temporizador", Price = 89.99m, Stock = 22, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-2), UpdatedAt = now.AddDays(-2), ImageUrl = "/uploads/products/Cepillo Eléctrico Oral-B.webp" }
             });
 
             await context.Products.AddRangeAsync(products);
