@@ -46,7 +46,7 @@ export function ProductDetailPage() {
     categories.find((c) => c.id === categoryId)?.name ?? "—";
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
   const handleAddToCart = async () => {
     if (!product) return;

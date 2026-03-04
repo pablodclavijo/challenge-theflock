@@ -25,7 +25,7 @@ export function CartSheet() {
   const [open, setOpen] = useState(false);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
   const handleCheckout = () => {
     setOpen(false);

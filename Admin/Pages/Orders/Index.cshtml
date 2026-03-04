@@ -201,93 +201,79 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
+        /*  Order detail modal  */
         function showOrderDetails(orderId) {
-            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+            const modal   = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
             const content = document.getElementById('orderDetailsContent');
-            
             content.innerHTML = `
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Cargando...</span>
                     </div>
-                </div>
-            `;
-            
+                </div>`;
             modal.show();
-            
             fetch(`/Orders/Details?id=${orderId}&handler=OrderDetails`)
-                .then(response => response.text())
-                .then(html => {
-                    content.innerHTML = html;
-                })
-                .catch(error => {
-                    content.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle"></i> Error al cargar los detalles del pedido.
-                        </div>
-                    `;
-                    console.error('Error:', error);
+                .then(r => r.text())
+                .then(html => { content.innerHTML = html; })
+                .catch(() => {
+                    content.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Error al cargar los detalles del pedido.</div>';
                 });
         }
 
+        /*  Status change  */
         function changeOrderStatus(orderId, newStatus) {
-            if (!confirm('�Est� seguro de que desea cambiar el estado del pedido?')) {
-                return;
-            }
-
+            if (!confirm('Esta seguro de cambiar el estado del pedido?')) return;
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
-            fetch(`/Orders/ChangeStatus?handler=ChangeStatus`, {
+            fetch('/Orders/ChangeStatus?handler=ChangeStatus', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
                 body: JSON.stringify({ orderId, newStatus })
             })
-            .then(response => response.json())
+            .then(r => r.json())
             .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error: ' + (data.message || 'No se pudo cambiar el estado'));
-                }
+                if (data.success) { location.reload(); }
+                else { alert('Error: ' + (data.message || 'No se pudo cambiar el estado')); }
             })
-            .catch(error => {
-                alert('Error al cambiar el estado del pedido');
-                console.error('Error:', error);
-            });
+            .catch(() => alert('Error al cambiar el estado del pedido'));
         }
-        //  SignalR: live new-order notifications 
-        (function () {
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js';
-            script.onload = function () {
-                const connection = new signalR.HubConnectionBuilder()
-                    .withUrl('/orderHub')
-                    .withAutomaticReconnect()
-                    .build();
 
-                connection.on('NewOrderReceived', function (data) {
-                    const body = document.getElementById('toastOrderBody');
-                    if (body) {
-                        const artículo = data.itemCount === 1 ? 'artículo' : 'artículos';
-                        body.textContent = `Nuevo pedido #${data.orderId}  ${Number(data.total).toFixed(2)} (${data.itemCount} ${artículo})`;
-                    }
-                    const toastEl = document.getElementById('newOrderToast');
-                    if (toastEl) {
-                        const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
-                        toast.show();
-                    }
-                    setTimeout(function () { location.reload(); }, 4000);
+        /*  SignalR live updates  */
+        function showNewOrderToast(data) {
+            const body = document.getElementById('toastOrderBody');
+            if (body) {
+                const art = data.itemCount === 1 ? 'articulo' : 'articulos';
+                body.textContent = 'Nuevo pedido #' + data.orderId + ' - $' + Number(data.total).toFixed(2) + ' (' + data.itemCount + ' ' + art + ')';
+            }
+            const toastEl = document.getElementById('newOrderToast');
+            if (toastEl) new bootstrap.Toast(toastEl, { delay: 6000 }).show();
+            setTimeout(function() { location.reload(); }, 4000);
+        }
+
+        (function startSignalR() {
+            if (typeof signalR === 'undefined') {
+                setTimeout(startSignalR, 1000);
+                return;
+            }
+            var connection = new signalR.HubConnectionBuilder()
+                .withUrl('/orderHub')
+                .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+                .configureLogging(signalR.LogLevel.Warning)
+                .build();
+
+            connection.on('NewOrderReceived', showNewOrderToast);
+
+            connection.start()
+                .then(function() { console.log('[SignalR] Connected to /orderHub'); })
+                .catch(function(err) {
+                    console.error('[SignalR] Failed to connect:', err);
+                    setTimeout(startSignalR, 10000);
                 });
-
-                connection.start()
-                    .then(() => console.log('SignalR connected to /orderHub'))
-                    .catch(err => console.warn('SignalR connection failed:', err));
-            };
-            document.head.appendChild(script);
         })();
+
+        /*  Polling fallback every 30 s  */
+        setInterval(function() { location.reload(); }, 30000);
     </script>
 }

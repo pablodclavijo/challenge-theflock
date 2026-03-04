@@ -61,7 +61,7 @@ function StepIndicator({ current }: { current: Step }) {
 }
 
 const formatPrice = (price: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
 export function CheckoutPage() {
   const { user } = useAuthContext();

@@ -87,7 +87,7 @@ export function ProductListPage() {
   };
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,8 +101,7 @@ export function ProductListPage() {
             </div>
             <nav className="hidden md:flex items-center gap-8">
               <span className="text-sm font-medium text-foreground cursor-pointer">Productos</span>
-              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Colecciones</span>
-              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Nosotros</span>
+              <Link to="/nosotros" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Nosotros</Link>
             </nav>
             <div className="flex items-center gap-4">
               <ThemeToggle />

@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthContext } from './contexts/AuthContext';
-import { LoginPage, RegisterPage, DashboardPage, ProductListPage, ProductDetailPage, CheckoutPage, OrdersPage, OrderDetailPage } from './pages';
+import { LoginPage, RegisterPage, DashboardPage, ProductListPage, ProductDetailPage, CheckoutPage, OrdersPage, OrderDetailPage, NosotrosPage } from './pages';
 
 function App() {
   const { isAuthenticated } = useAuthContext();
@@ -18,6 +18,9 @@ function App() {
       <Route path="/checkout" element={isAuthenticated ? <CheckoutPage /> : <Navigate to="/login?from=checkout" replace />} />
       <Route path="/orders" element={isAuthenticated ? <OrdersPage /> : <Navigate to="/login" replace />} />
       <Route path="/orders/:id" element={isAuthenticated ? <OrderDetailPage /> : <Navigate to="/login" replace />} />
+
+      {/* Misc */}
+      <Route path="/nosotros" element={<NosotrosPage />} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />

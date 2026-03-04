@@ -21,7 +21,7 @@ import { isPaymentApproved, OrderStatus } from "../types/order";
 import { StatusBadge } from "./OrdersPage";
 
 const formatPrice = (price: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
 const formatDate = (iso: string) =>
   new Intl.DateTimeFormat("es-ES", {

@@ -84,7 +84,7 @@ export function StatusBadge({ status }: { status: OrderStatus | number }) {
 }
 
 const formatPrice = (price: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
 const formatDate = (iso: string) =>
   new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
@@ -159,7 +159,7 @@ export function OrdersPage() {
       <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />

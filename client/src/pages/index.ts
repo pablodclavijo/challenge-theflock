@@ -11,3 +11,4 @@ export { ProductDetailPage } from './ProductDetailPage';
 export { CheckoutPage } from './CheckoutPage';
 export { OrdersPage } from './OrdersPage';
 export { OrderDetailPage } from './OrderDetailPage';
+export { NosotrosPage } from './NosotrosPage';

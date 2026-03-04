@@ -36,7 +36,7 @@ export function DashboardPage() {
     .reduce((sum: number, o: any) => sum + (o.total ?? o.totalAmount ?? 0), 0);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });

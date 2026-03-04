@@ -23,7 +23,7 @@ export function HomePage() {
     categories.find((c: Category) => c.id === categoryId)?.name ?? "—";
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -36,8 +36,7 @@ export function HomePage() {
             </div>
             <nav className="hidden md:flex items-center gap-8">
               <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Productos</span>
-              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Colecciones</span>
-              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Nosotros</span>
+              <Link to="/nosotros" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Nosotros</Link>
             </nav>
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer hidden sm:inline">
@@ -73,9 +72,6 @@ export function HomePage() {
               <span className="inline-flex items-center justify-center gap-3 bg-primary text-primary-foreground px-10 py-4 rounded-full text-sm font-semibold hover:opacity-90 transition-all cursor-pointer">
                 Explorar Catalogo
                 <ArrowRight className="h-4 w-4" />
-              </span>
-              <span className="inline-flex items-center justify-center gap-3 border border-border text-foreground px-10 py-4 rounded-full text-sm font-semibold hover:bg-secondary transition-all cursor-pointer">
-                Ver Colecciones
               </span>
             </div>
           </div>
