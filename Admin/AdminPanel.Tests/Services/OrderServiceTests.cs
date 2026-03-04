@@ -1,4 +1,5 @@
 using AdminPanel.Enums;
+using AdminPanel.Services.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -14,6 +15,7 @@ namespace AdminPanel.Tests.Services
         private readonly ApplicationDbContext _context;
         private readonly Mock<IProductService> _mockProductService;
         private readonly Mock<IStockMovementService> _mockStockMovementService;
+        private readonly Mock<IOrderEventPublisher> _mockEventPublisher;
         private readonly OrderService _orderService;
 
         public OrderServiceTests()
@@ -25,7 +27,8 @@ namespace AdminPanel.Tests.Services
             _context = new ApplicationDbContext(options);
             _mockProductService = new Mock<IProductService>();
             _mockStockMovementService = new Mock<IStockMovementService>();
-            _orderService = new OrderService(_context, _mockProductService.Object, _mockStockMovementService.Object);
+            _mockEventPublisher = new Mock<IOrderEventPublisher>();
+            _orderService = new OrderService(_context, _mockProductService.Object, _mockStockMovementService.Object, _mockEventPublisher.Object);
 
             SeedDatabase();
         }
@@ -283,10 +286,10 @@ namespace AdminPanel.Tests.Services
         #region UpdateOrderStatusAsync Tests
 
         [Fact]
-        public async Task UpdateOrderStatusAsync_FromPendingToConfirmed_UpdatesStatusAndDeductsStock()
+        public async Task UpdateOrderStatusAsync_FromPaidToConfirmed_UpdatesStatusAndDeductsStock()
         {
             // Arrange
-            var order = CreateTestOrder(OrderStatus.Pending);
+            var order = CreateTestOrder(OrderStatus.Paid);
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
@@ -539,7 +542,7 @@ namespace AdminPanel.Tests.Services
         #region Valid Status Transitions Tests
 
         [Theory]
-        [InlineData(OrderStatus.Pending, OrderStatus.Confirmed, true)]
+        [InlineData(OrderStatus.Paid, OrderStatus.Confirmed, true)]
         [InlineData(OrderStatus.Confirmed, OrderStatus.Shipped, true)]
         [InlineData(OrderStatus.Shipped, OrderStatus.Delivered, true)]
         public async Task UpdateOrderStatusAsync_WithValidTransitions_Succeeds(OrderStatus from, OrderStatus to, bool shouldSucceed)
@@ -549,7 +552,7 @@ namespace AdminPanel.Tests.Services
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            if (from == OrderStatus.Pending && to == OrderStatus.Confirmed)
+            if (from == OrderStatus.Paid && to == OrderStatus.Confirmed)
             {
                 SetupProductServiceMocks();
             }

@@ -200,6 +200,29 @@
     </div>
 </div>
 
+<!-- Change Status Confirmation Modal -->
+<div class="modal fade" id="changeStatusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-arrow-repeat"></i> Cambiar Estado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">¿Está seguro de que desea cambiar el estado del pedido?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmChangeStatusBtn">
+                    <i class="bi bi-check-circle"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -224,13 +247,25 @@
         }
 
         /*  Status change  */
+        let pendingStatusOrderId = null;
+        let pendingStatusNewStatus = null;
+
         function changeOrderStatus(orderId, newStatus) {
-            if (!confirm('Esta seguro de cambiar el estado del pedido?')) return;
+            pendingStatusOrderId = orderId;
+            pendingStatusNewStatus = newStatus;
+            const modal = new bootstrap.Modal(document.getElementById('changeStatusModal'));
+            modal.show();
+        }
+
+        document.getElementById('confirmChangeStatusBtn').addEventListener('click', function () {
+            const modalEl = document.getElementById('changeStatusModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             fetch('/Orders/ChangeStatus?handler=ChangeStatus', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
-                body: JSON.stringify({ orderId, newStatus })
+                body: JSON.stringify({ orderId: pendingStatusOrderId, newStatus: pendingStatusNewStatus })
             })
             .then(r => r.json())
             .then(data => {
@@ -238,7 +273,7 @@
                 else { alert('Error: ' + (data.message || 'No se pudo cambiar el estado')); }
             })
             .catch(() => alert('Error al cambiar el estado del pedido'));
-        }
+        });
 
         /*  SignalR live updates  */
         function showNewOrderToast(data) {
