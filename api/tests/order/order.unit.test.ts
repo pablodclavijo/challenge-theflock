@@ -13,6 +13,7 @@ import { GetOrderUseCase } from "../../src/application/use-cases/order/get-order
 import { MockPaymentService } from "../../src/infrastructure/services/mock-payment.service";
 import { ICartRepository } from "../../src/domain/repositories/cart.repository";
 import { IOrderRepository } from "../../src/domain/repositories/order.repository";
+import { IProductRepository } from "../../src/domain/repositories/product.repository";
 import { CartItem } from "../../src/domain/entities/cart-item";
 import { Order } from "../../src/domain/entities/order";
 import { OrderStatus } from "../../src/domain/enums/order-status";
@@ -80,6 +81,17 @@ function makeOrderRepo(
     updateStatus: jest.fn(),
     ...overrides
   } as jest.Mocked<IOrderRepository>;
+}
+
+function makeProductRepo(
+  overrides: Partial<IProductRepository> = {}
+): jest.Mocked<IProductRepository> {
+  return {
+    findAll: jest.fn(),
+    findById: jest.fn(),
+    decrementStock: jest.fn(),
+    ...overrides
+  } as jest.Mocked<IProductRepository>;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -241,17 +253,21 @@ describe("MockPaymentService", () => {
 
 describe("ProcessPaymentUseCase", () => {
   it("marks order as Paid on successful payment", async () => {
-    const order = makeOrder({ id: 1, userId: USER_ID, total: 121 });
+    const order = makeOrder({ id: 1, userId: USER_ID, total: 121, items: [{ id: 1, orderId: 1, productId: 10, productNameSnapshot: "Product 10", unitPriceSnapshot: 50, quantity: 2, lineTotal: 100 }] });
     const orderRepo = makeOrderRepo({
       findById: jest.fn().mockResolvedValue(order),
       updateStatus: jest.fn().mockResolvedValue(undefined)
     });
     const paymentSvc = { processPayment: jest.fn().mockResolvedValue({ success: true, transactionId: "txn_1", message: "Approved" }) };
-    const useCase = new ProcessPaymentUseCase(orderRepo, paymentSvc);
+    const productRepo = makeProductRepo({
+      decrementStock: jest.fn().mockResolvedValue(undefined)
+    });
+    const useCase = new ProcessPaymentUseCase(orderRepo, paymentSvc, productRepo);
 
     const result = await useCase.execute(USER_ID, 1);
 
     expect(orderRepo.updateStatus).toHaveBeenCalledWith(1, OrderStatus.Paid);
+    expect(productRepo.decrementStock).toHaveBeenCalledWith([{ productId: 10, quantity: 2 }]);
     expect(result.status).toBe(OrderStatus.Paid);
   });
 
@@ -262,11 +278,13 @@ describe("ProcessPaymentUseCase", () => {
       updateStatus: jest.fn().mockResolvedValue(undefined)
     });
     const paymentSvc = { processPayment: jest.fn().mockResolvedValue({ success: false, transactionId: "txn_2", message: "Declined" }) };
-    const useCase = new ProcessPaymentUseCase(orderRepo, paymentSvc);
+    const productRepo = makeProductRepo();
+    const useCase = new ProcessPaymentUseCase(orderRepo, paymentSvc, productRepo);
 
     const result = await useCase.execute(USER_ID, 1);
 
     expect(orderRepo.updateStatus).toHaveBeenCalledWith(1, OrderStatus.PaymentFailed);
+    expect(productRepo.decrementStock).not.toHaveBeenCalled();
     expect(result.status).toBe(OrderStatus.PaymentFailed);
   });
 
@@ -274,10 +292,12 @@ describe("ProcessPaymentUseCase", () => {
     const order = makeOrder({ id: 1, userId: "other-user" });
     const orderRepo = makeOrderRepo({ findById: jest.fn().mockResolvedValue(order) });
     const paymentSvc = { processPayment: jest.fn() };
-    const useCase = new ProcessPaymentUseCase(orderRepo, paymentSvc);
+    const productRepo = makeProductRepo();
+    const useCase = new ProcessPaymentUseCase(orderRepo, paymentSvc, productRepo);
 
     await expect(useCase.execute(USER_ID, 1)).rejects.toThrow(NotFoundError);
     expect(paymentSvc.processPayment).not.toHaveBeenCalled();
+    expect(productRepo.decrementStock).not.toHaveBeenCalled();
   });
 });
 

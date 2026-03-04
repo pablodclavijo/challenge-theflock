@@ -6,18 +6,20 @@ import { GetOrderUseCase } from "../../../application/use-cases/order/get-order.
 import { ProcessPaymentUseCase } from "../../../application/use-cases/order/process-payment.use-case";
 import { SequelizeCartRepository } from "../../../infrastructure/persistence/sequelize/repositories/sequelize-cart.repository";
 import { SequelizeOrderRepository } from "../../../infrastructure/persistence/sequelize/repositories/sequelize-order.repository";
+import { SequelizeProductRepository } from "../../../infrastructure/persistence/sequelize/repositories/sequelize-product.repository";
 import { MockPaymentService } from "../../../infrastructure/services/mock-payment.service";
 import { AppError } from "../../../shared/errors/AppError";
 import { publishOrderCreated } from "../../../infrastructure/messaging/order-created.publisher";
 
 const cartRepository = new SequelizeCartRepository();
 const orderRepository = new SequelizeOrderRepository();
+const productRepository = new SequelizeProductRepository();
 const paymentService = new MockPaymentService();
 
 const checkoutUseCase = new CheckoutUseCase(cartRepository, orderRepository);
 const listOrdersUseCase = new ListOrdersUseCase(orderRepository);
 const getOrderUseCase = new GetOrderUseCase(orderRepository);
-const processPaymentUseCase = new ProcessPaymentUseCase(orderRepository, paymentService);
+const processPaymentUseCase = new ProcessPaymentUseCase(orderRepository, paymentService, productRepository);
 
 export const orderController = {
   /**

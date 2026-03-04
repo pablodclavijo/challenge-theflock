@@ -2,5 +2,4 @@
  * Components barrel export
  */
 
-export { ProductCard } from './ProductCard';
-export { Navbar } from './Navbar';
+export { MainLayout } from './MainLayout';

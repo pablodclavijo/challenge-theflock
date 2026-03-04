@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShoppingBag, ArrowRight, Eye, EyeOff, ShoppingCart } from "lucide-react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useAuthContext } from "../contexts/AuthContext";
+import { ThemeToggle } from "../components/ui/theme-toggle";
 
 export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);

@@ -4,6 +4,7 @@ import { ArrowRight, ShoppingBag, Star, Truck, Shield, ChevronRight } from "luci
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../services/api";
+import { getImageUrl } from "../lib/utils";
 import type { Category } from "../types/product";
 
 export function HomePage() {
@@ -35,7 +36,7 @@ export function HomePage() {
               <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
             </div>
             <nav className="hidden md:flex items-center gap-8">
-              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Productos</span>
+            <Link to="/#productos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Productos</Link>
               <Link to="/nosotros" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Nosotros</Link>
             </nav>
             <div className="flex items-center gap-3">
@@ -125,7 +126,7 @@ export function HomePage() {
                 <div className="aspect-[4/5] bg-secondary rounded-2xl mb-5 overflow-hidden relative">
                   {product.imageUrl ? (
                     <img
-                      src={product.imageUrl}
+                      src={getImageUrl(product.imageUrl) || ""}
                       alt={product.name}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />

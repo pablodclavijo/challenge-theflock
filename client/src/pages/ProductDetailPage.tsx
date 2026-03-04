@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useGoBack } from "../hooks";
 import {
   ShoppingBag,
   ChevronRight,
@@ -18,8 +19,7 @@ import { apiClient } from "../services/api";
 import type { Category } from "../types/product";
 import { useCart } from "../contexts/CartContext";
 import { useAuthContext } from "../contexts/AuthContext";
-import { CartSheet } from "../components/ui/CartSheet";
-import { ThemeToggle } from "../components/ui/theme-toggle";
+import { getImageUrl } from "../lib/utils";
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +30,7 @@ export function ProductDetailPage() {
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
+  const goBack = useGoBack("/#productos");
 
   const { data: product, isLoading, isError } = useQuery({
     queryKey: ["product", id],
@@ -85,28 +86,7 @@ export function ProductDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-accent" />
-              <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <CartSheet />
-              <Link to="/dashboard">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-                  U
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <>
       {/* Loading */}
       {isLoading && (
         <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8 md:py-12">
@@ -125,7 +105,7 @@ export function ProductDetailPage() {
       {isError && (
         <main className="max-w-7xl mx-auto px-6 lg:px-8 py-24 text-center">
           <p className="text-muted-foreground">No se pudo cargar el producto.</p>
-          <Link to="/" className="mt-4 inline-block text-accent underline text-sm">Volver al catalogo</Link>
+          <button onClick={goBack} className="mt-4 inline-block text-accent underline text-sm">Volver al catalogo</button>
         </main>
       )}
 
@@ -133,7 +113,7 @@ export function ProductDetailPage() {
         <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8 md:py-12">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-10">
-            <Link to="/" className="hover:text-foreground transition-colors font-medium cursor-pointer">Productos</Link>
+            <Link to="/#productos" className="hover:text-foreground transition-colors font-medium cursor-pointer">Productos</Link>
             <ChevronRight className="h-3.5 w-3.5 text-border" />
             <span className="hover:text-foreground transition-colors font-medium cursor-pointer">{getCategoryName(product.categoryId)}</span>
             <ChevronRight className="h-3.5 w-3.5 text-border" />
@@ -145,7 +125,7 @@ export function ProductDetailPage() {
           <div className="group relative bg-secondary rounded-3xl overflow-hidden aspect-square flex items-center justify-center">
               {product.imageUrl ? (
                 <img
-                  src={product.imageUrl}
+                  src={getImageUrl(product.imageUrl) || ""}
                   alt={product.name}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
@@ -305,6 +285,6 @@ export function ProductDetailPage() {
         </div>
       </main>
       )}
-    </div>
+    </>
   );
 }

@@ -4,7 +4,9 @@
  */
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGoBack } from "../hooks";
 import {
   MapPin,
   ShoppingBag,
@@ -20,6 +22,7 @@ import { useAuthContext } from "../contexts/AuthContext";
 import { apiClient } from "../services/api";
 import { ThemeToggle } from "../components/ui/theme-toggle";
 import { TAX_RATE } from "../lib/constants";
+import { getImageUrl } from "../lib/utils";
 import type { Order, PaymentResult } from "../types/order";
 import { isPaymentApproved } from "../types/order";
 
@@ -66,7 +69,8 @@ const formatPrice = (price: number) =>
 export function CheckoutPage() {
   const { user } = useAuthContext();
   const { items, subtotal, clearCart } = useCart();
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const goBack = useGoBack("/#productos");
 
   const [step, setStep] = useState<Step>("address");
   const [shippingAddress, setShippingAddress] = useState(user?.shippingAddress ?? "");
@@ -87,9 +91,9 @@ export function CheckoutPage() {
           <h2 className="text-xl font-semibold text-foreground">Tu carrito está vacío</h2>
           <p className="text-sm text-muted-foreground mt-1">Añade productos antes de continuar al checkout.</p>
         </div>
-        <Link to="/" className="text-sm text-primary underline underline-offset-2">
+        <button onClick={goBack} className="text-sm text-primary underline underline-offset-2">
           Volver al catálogo
-        </Link>
+        </button>
       </div>
     );
   }
@@ -120,6 +124,8 @@ export function CheckoutPage() {
       // 3. Clear server-side cart on success
       if (isPaymentApproved(paymentResult)) {
         await clearCart();
+        // Invalidate products query to refresh stock numbers
+        queryClient.invalidateQueries({ queryKey: ["products"] });
         setStep("confirmed");
       } else {
         setStep("failed");
@@ -140,7 +146,7 @@ export function CheckoutPage() {
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           {step === "address" ? (
             <button
-              onClick={() => navigate(-1)}
+              onClick={goBack}
               className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -247,7 +253,7 @@ export function CheckoutPage() {
                 <li key={item.productId} className="flex gap-4 p-4 bg-background">
                   <div className="w-14 h-14 rounded-lg bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={getImageUrl(item.imageUrl) || ""} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       <ShoppingBag className="h-5 w-5 text-border" />
                     )}

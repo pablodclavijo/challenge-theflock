@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Code2, ShoppingBag } from "lucide-react";
+import { useGoBack } from "../hooks";
 
 export function NosotrosPage() {
+  const goBack = useGoBack("/");
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
       <ShoppingBag className="h-12 w-12 text-accent mb-6" />
@@ -41,13 +44,13 @@ export function NosotrosPage() {
         </div>
       </div>
 
-      <Link
-        to="/"
+      <button
+        onClick={goBack}
         className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver a la tienda
-      </Link>
+      </button>
     </div>
   );
 }

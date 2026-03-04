@@ -8,7 +8,6 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ShoppingBag,
   ChevronRight,
-  ArrowLeft,
   Loader2,
   RefreshCw,
   CheckCircle2,
@@ -19,7 +18,6 @@ import {
   PackageCheck,
 } from "lucide-react";
 import { apiClient } from "../services/api";
-import { ThemeToggle } from "../components/ui/theme-toggle";
 import { useAuthContext } from "../contexts/AuthContext";
 import type { Order, OrderListResponse } from "../types/order";
 import { OrderStatus } from "../types/order";
@@ -154,31 +152,24 @@ export function OrdersPage() {
   }, [isAuthenticated, silentFetchOrders]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Volver</span>
-          </button>
-          <h1 className="font-serif text-lg font-semibold text-foreground flex-1">Mis pedidos</h1>
-          <button
-            onClick={() => fetchOrders(page)}
-            className="relative p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
-            aria-label="Actualizar"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-          </button>
-          <ThemeToggle />
+    <main className="max-w-3xl mx-auto px-4 py-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-serif text-2xl font-bold text-foreground">Mis pedidos</h1>
+          <p className="text-sm text-muted-foreground mt-1">Historial de compras y estado de envíos</p>
         </div>
-      </header>
+        <button
+          onClick={() => fetchOrders(page)}
+          className="relative p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
+          aria-label="Actualizar"
+        >
+          <RefreshCw className="h-4 w-4" />
+          <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+        </button>
+      </div>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <div>
         {/* Loading */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
@@ -282,7 +273,7 @@ export function OrdersPage() {
             )}
           </>
         )}
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

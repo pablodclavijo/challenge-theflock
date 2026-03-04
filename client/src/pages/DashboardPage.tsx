@@ -1,26 +1,39 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import {
   ShoppingBag,
   ShoppingCart,
-  Heart,
   MapPin,
   ChevronRight,
   Package,
   CreditCard,
   Settings,
   LogOut,
+  X,
+  Check,
 } from "lucide-react";
 import { apiClient } from "../services/api";
 import { useAuthContext } from "../contexts/AuthContext";
-import { ThemeToggle } from "../components/ui/theme-toggle";
+import { useCart } from "../contexts/CartContext";
 
 export function DashboardPage() {
-  const { user, logout } = useAuthContext();
+  const { user, logout, updateProfile } = useAuthContext();
+  const { openCart } = useCart();
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({
+    fullName: user?.fullName ?? "",
+    shippingAddress: user?.shippingAddress ?? "",
+  });
 
   const { data: ordersResponse, isLoading: loadingOrders } = useQuery({
-    queryKey: ["orders"],
+    queryKey: ["orders", "recent"],
     queryFn: () => apiClient.getOrders({ limit: 5 }),
+  });
+
+  const { data: allOrdersResponse } = useQuery({
+    queryKey: ["orders", "all"],
+    queryFn: () => apiClient.getOrders({}),
   });
 
   const { data: cartData } = useQuery({
@@ -29,10 +42,11 @@ export function DashboardPage() {
   });
 
   const orders = ordersResponse?.data ?? ordersResponse ?? [];
+  const allOrders = allOrdersResponse?.data ?? allOrdersResponse ?? [];
   const cartCount = cartData?.items?.length ?? cartData?.length ?? 0;
 
-  const totalSpent = orders
-    .filter((o: any) => o.status === "paid" || o.status === "delivered" || o.status === "Entregado")
+  const totalSpent = allOrders
+    .filter((o: any) => o.status !== "cancelled" && o.status !== "Cancelado")
     .reduce((sum: number, o: any) => sum + (o.total ?? o.totalAmount ?? 0), 0);
 
   const formatPrice = (price: number) =>
@@ -54,39 +68,30 @@ export function DashboardPage() {
 
   const isDelivered = (status: string) =>
     status === "delivered" || status === "paid" || status === "Entregado";
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-accent" />
-              <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-8">
-              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Productos</span>
-              <span className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Colecciones</span>
-            </nav>
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <span className="relative cursor-pointer">
-                <ShoppingCart className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-accent text-accent-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </span>
-              <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground text-xs font-bold">
-                {user?.fullName?.charAt(0) ?? "U"}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-6 lg:px-8 py-10 md:py-16">
+  const handleEditProfile = () => {
+    setEditForm({
+      fullName: user?.fullName ?? "",
+      shippingAddress: user?.shippingAddress ?? "",
+    });
+    setIsEditingProfile(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingProfile(false);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfile(editForm);
+      setIsEditingProfile(false);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    }
+  };
+
+  return (
+    <main className="max-w-7xl mx-auto px-6 lg:px-8 py-10 md:py-16">
         {/* Page header */}
         <div className="mb-12">
           <span className="text-xs font-semibold tracking-[0.2em] uppercase text-accent mb-3 block">Mi cuenta</span>
@@ -105,24 +110,71 @@ export function DashboardPage() {
                 <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center text-accent font-serif font-bold text-2xl mb-4">
                   {user?.fullName?.charAt(0) ?? "U"}
                 </div>
-                <h2 className="text-base font-bold text-foreground">{user?.fullName}</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
+                {!isEditingProfile ? (
+                  <>
+                    <h2 className="text-base font-bold text-foreground">{user?.fullName}</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      value={editForm.fullName}
+                      onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                      className="text-base font-bold text-foreground bg-background border border-border rounded-lg px-3 py-1.5 w-full max-w-xs text-center"
+                      placeholder="Nombre completo"
+                    />
+                    <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
+                  </>
+                )}
               </div>
 
               <div className="space-y-4 pt-5 border-t border-border">
                 <div className="flex items-start gap-3">
                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Direccion</p>
-                    <p className="text-sm text-foreground">{user?.shippingAddress ?? "Sin dirección guardada"}</p>
+                    {!isEditingProfile ? (
+                      <p className="text-sm text-foreground">{user?.shippingAddress ?? "Sin dirección guardada"}</p>
+                    ) : (
+                      <textarea
+                        value={editForm.shippingAddress}
+                        onChange={(e) => setEditForm({ ...editForm, shippingAddress: e.target.value })}
+                        className="text-sm text-foreground bg-background border border-border rounded-lg px-3 py-2 w-full resize-none"
+                        placeholder="Dirección de envío"
+                        rows={2}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
 
-              <button className="mt-7 w-full py-3 px-4 border border-border text-foreground text-sm font-semibold rounded-xl hover:bg-secondary transition flex items-center justify-center gap-2">
-                <Settings className="h-4 w-4" />
-                Editar Perfil
-              </button>
+              {!isEditingProfile ? (
+                <button 
+                  onClick={handleEditProfile}
+                  className="mt-7 w-full py-3 px-4 border border-border text-foreground text-sm font-semibold rounded-xl hover:bg-secondary transition flex items-center justify-center gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  Editar Perfil
+                </button>
+              ) : (
+                <div className="mt-7 flex gap-2">
+                  <button 
+                    onClick={handleCancelEdit}
+                    className="flex-1 py-3 px-4 border border-border text-foreground text-sm font-semibold rounded-xl hover:bg-secondary transition flex items-center justify-center gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={handleSaveProfile}
+                    className="flex-1 py-3 px-4 bg-accent text-accent-foreground text-sm font-semibold rounded-xl hover:bg-accent/90 transition flex items-center justify-center gap-2"
+                  >
+                    <Check className="h-4 w-4" />
+                    Guardar
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Quick actions */}
@@ -140,7 +192,10 @@ export function DashboardPage() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-border group-hover:text-muted-foreground transition-colors shrink-0" />
               </Link>
-              <button className="w-full flex items-center gap-4 p-5 hover:bg-secondary transition group text-left border-b border-border">
+              <button 
+                onClick={openCart}
+                className="w-full flex items-center gap-4 p-5 hover:bg-secondary transition group text-left border-b border-border"
+              >
                 <div className="w-10 h-10 bg-accent text-accent-foreground rounded-xl flex items-center justify-center shrink-0">
                   <ShoppingCart className="w-5 h-5" />
                 </div>
@@ -180,12 +235,11 @@ export function DashboardPage() {
           {/* Right column: Orders + Stats */}
           <div className="lg:col-span-2 space-y-6">
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                { label: "Pedidos", value: String(orders.length), icon: Package },
+                { label: "Pedidos", value: String(allOrders.length), icon: Package },
                 { label: "Gastado", value: formatPrice(totalSpent), icon: CreditCard },
                 { label: "En carrito", value: String(cartCount), icon: ShoppingCart },
-                { label: "Favoritos", value: "0", icon: Heart },
               ].map((stat) => (
                 <div key={stat.label} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
@@ -259,6 +313,5 @@ export function DashboardPage() {
           </div>
         </div>
       </main>
-    </div>
   );
 }

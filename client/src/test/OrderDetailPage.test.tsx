@@ -120,7 +120,7 @@ describe('order not found', () => {
   it('shows a link back to orders history', async () => {
     renderDetail();
     await waitFor(() => screen.getByText(/pedido no encontrado/i));
-    expect(screen.getByRole('link', { name: /volver a mis pedidos/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /volver a mis pedidos/i })).toBeInTheDocument();
   });
 });
 

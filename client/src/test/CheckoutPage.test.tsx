@@ -104,7 +104,7 @@ describe('empty cart guard', () => {
 
   it('shows a link back to the catalogue', () => {
     renderCheckout();
-    expect(screen.getByRole('link', { name: /volver al catálogo/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /volver al catálogo/i })).toBeInTheDocument();
   });
 });
 

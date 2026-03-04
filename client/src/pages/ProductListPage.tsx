@@ -6,7 +6,6 @@ import {
   ShoppingCart,
   Search,
   SlidersHorizontal,
-  Heart,
   Star,
   ChevronLeft,
   ChevronRight,
@@ -14,9 +13,8 @@ import {
 } from "lucide-react";
 import { apiClient } from "../services/api";
 import type { Product, Category, ProductListResponse } from "../types/product";
-import { CartSheet } from "../components/ui/CartSheet";
 import { useCart } from "../contexts/CartContext";
-import { ThemeToggle } from "../components/ui/theme-toggle";
+import { getImageUrl } from "../lib/utils";
 
 const PAGE_SIZE = 12;
 
@@ -90,32 +88,7 @@ export function ProductListPage() {
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-accent" />
-              <span className="font-serif text-xl font-bold text-foreground tracking-tight">ShopNow</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-8">
-              <span className="text-sm font-medium text-foreground cursor-pointer">Productos</span>
-              <Link to="/nosotros" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Nosotros</Link>
-            </nav>
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <CartSheet />
-              <Link to="/dashboard">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-                  U
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <>
       {/* Hero Banner */}
       <section className="bg-primary text-primary-foreground">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 md:py-24">
@@ -148,7 +121,7 @@ export function ProductListPage() {
         </div>
       </section>
 
-      <main className="max-w-7xl mx-auto px-6 lg:px-8 py-10">
+      <main className="max-w-7xl mx-auto px-6 lg:px-8 py-10" id="productos">
         {/* Toolbar */}
         <div className="flex flex-col gap-5 mb-10">
           <div className="flex items-center justify-between">
@@ -281,7 +254,7 @@ export function ProductListPage() {
                 <div className="relative aspect-[4/5] bg-secondary rounded-2xl mb-5 overflow-hidden">
                   {product.imageUrl ? (
                     <img
-                      src={product.imageUrl}
+                      src={getImageUrl(product.imageUrl) || ""}
                       alt={product.name}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
@@ -412,6 +385,6 @@ export function ProductListPage() {
           <p className="text-xs text-muted-foreground">&copy; 2026 ShopNow. Todos los derechos reservados.</p>
         </div>
       </footer>
-    </div>
+    </>
   );
 }

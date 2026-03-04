@@ -4,12 +4,12 @@
  * Guests can view the cart freely; login is required only when they hit "Checkout".
  */
 
-import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ShoppingCart, Trash2, Minus, Plus, LogIn } from "lucide-react";
 import { useCart } from "../../contexts/CartContext";
 import { TAX_RATE } from "../../lib/constants";
 import { useAuthContext } from "../../contexts/AuthContext";
+import { getImageUrl } from "../../lib/utils";
 import {
   Sheet,
   SheetContent,
@@ -19,16 +19,15 @@ import {
 } from "./sheet";
 
 export function CartSheet() {
-  const { items, totalItems, subtotal, taxes, total, removeFromCart, updateQuantity } = useCart();
+  const { items, totalItems, subtotal, taxes, total, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
   const { isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price);
 
   const handleCheckout = () => {
-    setOpen(false);
+    setIsCartOpen(false);
     if (!isAuthenticated) {
       navigate("/login?from=checkout");
     } else {
@@ -53,7 +52,7 @@ export function CartSheet() {
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
       <SheetTrigger asChild>
         <button
           aria-label={`Carrito (${totalItems} artículos)`}
@@ -68,7 +67,7 @@ export function CartSheet() {
         </button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="flex flex-col w-full sm:max-w-md">
+      <SheetContent side="right" className="flex flex-col w-full sm:max-w-md px-4 pb-6">
         <SheetHeader>
           <SheetTitle className="font-serif text-xl tracking-tight">
             Tu carrito{" "}
@@ -94,7 +93,7 @@ export function CartSheet() {
             </div>
             <Link
               to="/products"
-              onClick={() => setOpen(false)}
+              onClick={() => setIsCartOpen(false)}
               className="text-sm text-accent underline underline-offset-2"
             >
               Ver catálogo
@@ -112,7 +111,7 @@ export function CartSheet() {
                   <div className="w-16 h-16 rounded-xl bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
                     {item.imageUrl ? (
                       <img
-                        src={item.imageUrl}
+                        src={getImageUrl(item.imageUrl) || ""}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />

@@ -4,7 +4,9 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGoBack } from "../hooks";
 import {
   ArrowLeft,
   Loader2,
@@ -12,9 +14,10 @@ import {
   CreditCard,
   ShoppingBag,
   RefreshCw,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { apiClient } from "../services/api";
-import { ThemeToggle } from "../components/ui/theme-toggle";
 import { useAuthContext } from "../contexts/AuthContext";
 import type { Order, PaymentResult } from "../types/order";
 import { isPaymentApproved, OrderStatus } from "../types/order";
@@ -36,6 +39,8 @@ export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated } = useAuthContext();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const goBack = useGoBack("/orders");
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,6 +110,10 @@ export function OrderDetailPage() {
       // Refresh order to get updated status
       const updated: Order = await apiClient.getOrderById(order.id);
       setOrder(updated);
+      // Invalidate products query to refresh stock numbers if payment succeeded
+      if (isPaymentApproved(result)) {
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      }
     } catch {
       setPaymentError("Error al procesar el pago. Inténtalo de nuevo.");
     } finally {
@@ -129,9 +138,9 @@ export function OrderDetailPage() {
           <h2 className="text-lg font-semibold text-foreground">Pedido no encontrado</h2>
           <p className="text-sm text-muted-foreground mt-1">{error || "No existe este pedido."}</p>
         </div>
-        <Link to="/orders" className="text-sm text-primary underline underline-offset-2">
+        <button onClick={goBack} className="text-sm text-primary underline underline-offset-2">
           Volver a mis pedidos
-        </Link>
+        </button>
       </div>
     );
   }
@@ -139,44 +148,59 @@ export function OrderDetailPage() {
   const canRetryPayment = order.status === OrderStatus.Pending || order.status === OrderStatus.PaymentFailed;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
+    <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/orders")}
+            onClick={goBack}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Mis pedidos</span>
           </button>
-          <h1 className="font-serif text-lg font-semibold text-foreground flex-1">
+          <h1 className="font-serif text-2xl font-bold text-foreground">
             Pedido <span className="font-mono">#{order.id}</span>
           </h1>
-          <button
-            onClick={fetchOrder}
-            className="relative p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
-            aria-label="Actualizar"
-          >
-            <RefreshCw className="h-4 w-4" />
-            {order && order.status !== OrderStatus.Delivered && (
-              <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            )}
-          </button>
-          <ThemeToggle />
         </div>
-      </header>
-
-      <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+        <button
+          onClick={fetchOrder}
+          className="relative p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
+          aria-label="Actualizar"
+        >
+          <RefreshCw className="h-4 w-4" />
+          {order && order.status !== OrderStatus.Delivered && (
+            <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+          )}
+        </button>
+      </div>
 
         {/* Payment result toast */}
         {paymentResult && (
-          <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm font-medium
-          {isPaymentApproved(paymentResult)
-              ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300"
-              : "bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-700 dark:text-red-300"
+          <div className={`flex items-start gap-3 p-4 rounded-xl border shadow-sm text-sm
+            ${isPaymentApproved(paymentResult)
+              ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700"
+              : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700"
             }`}>
-            {paymentResult.message}
+            {isPaymentApproved(paymentResult) ? (
+              <>
+                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-green-900 dark:text-green-100">¡Pago aprobado exitosamente!</p>
+                  <p className="text-green-700 dark:text-green-300 mt-0.5 text-xs">
+                    Tu pedido ha sido confirmado y está siendo procesado.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-red-900 dark:text-red-100">Pago rechazado</p>
+                  <p className="text-red-700 dark:text-red-300 mt-0.5 text-xs">{paymentResult.message}</p>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -270,14 +294,13 @@ export function OrderDetailPage() {
         )}
 
         {/* Back link */}
-        <Link
-          to="/orders"
+        <button
+          onClick={goBack}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver al historial de pedidos
-        </Link>
-      </main>
-    </div>
+        </button>
+    </main>
   );
 }

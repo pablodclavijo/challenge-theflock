@@ -17,7 +17,13 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
+export interface StockUpdate {
+  productId: number;
+  quantity: number;
+}
+
 export interface IProductRepository {
   findAll(filters: ProductFilters): Promise<PaginatedResult<Product>>;
   findById(id: number): Promise<Product | null>;
+  decrementStock(updates: StockUpdate[]): Promise<void>;
 }

@@ -42,6 +42,10 @@ interface CartContextType {
   updateQuantity: (productId: number, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   isLoading: boolean;
+  isCartOpen: boolean;
+  setIsCartOpen: (open: boolean) => void;
+  openCart: () => void;
+  closeCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -49,6 +53,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const { isAuthenticated } = useAuthContext();
 
   // Parse API response into items array
@@ -250,6 +255,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const taxes = useMemo(() => subtotal * TAX_RATE, [subtotal]);
   const total = useMemo(() => subtotal + taxes, [subtotal, taxes]);
 
+  const openCart = useCallback(() => setIsCartOpen(true), []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
+
   const value = useMemo(
     () => ({
       items,
@@ -263,8 +271,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateQuantity,
       clearCart,
       isLoading,
+      isCartOpen,
+      setIsCartOpen,
+      openCart,
+      closeCart,
     }),
-    [items, totalItems, subtotal, taxes, total, totalPrice, addToCart, removeFromCart, updateQuantity, clearCart, isLoading]
+    [items, totalItems, subtotal, taxes, total, totalPrice, addToCart, removeFromCart, updateQuantity, clearCart, isLoading, isCartOpen, openCart, closeCart]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

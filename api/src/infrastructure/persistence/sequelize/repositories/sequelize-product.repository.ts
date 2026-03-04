@@ -2,7 +2,8 @@ import { Op } from "sequelize";
 import {
   IProductRepository,
   PaginatedResult,
-  ProductFilters
+  ProductFilters,
+  StockUpdate
 } from "../../../../domain/repositories/product.repository";
 import { Product as ProductDomain } from "../../../../domain/entities/product";
 import { Product } from "../models/product.model";
@@ -56,6 +57,30 @@ export class SequelizeProductRepository implements IProductRepository {
     });
 
     return record ? this.toDomain(record) : null;
+  }
+
+  async decrementStock(updates: StockUpdate[]): Promise<void> {
+    const sequelize = Product.sequelize;
+    if (!sequelize) {
+      throw new Error("Sequelize instance not available");
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      for (const update of updates) {
+        await Product.decrement("stock", {
+          by: update.quantity,
+          where: { id: update.productId },
+          transaction
+        });
+      }
+
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
   private toDomain(record: Product): ProductDomain {
