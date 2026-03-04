@@ -130,7 +130,7 @@ namespace AdminPanel.Services
                     newStock,
                     item.Quantity,
                     "OrderConfirmation",
-                    $"Descuento por confirmaci�n de pedido #{orderId}",
+                    $"Descuento por confirmación de pedido #{orderId}",
                     userId);
             }
 
