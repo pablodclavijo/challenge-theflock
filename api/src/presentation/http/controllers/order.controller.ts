@@ -8,6 +8,7 @@ import { SequelizeCartRepository } from "../../../infrastructure/persistence/seq
 import { SequelizeOrderRepository } from "../../../infrastructure/persistence/sequelize/repositories/sequelize-order.repository";
 import { MockPaymentService } from "../../../infrastructure/services/mock-payment.service";
 import { AppError } from "../../../shared/errors/AppError";
+import { publishOrderCreated } from "../../../infrastructure/messaging/order-created.publisher";
 
 const cartRepository = new SequelizeCartRepository();
 const orderRepository = new SequelizeOrderRepository();
@@ -50,6 +51,17 @@ export const orderController = {
       }
       const userId = req.user!.sub;
       const result = await checkoutUseCase.execute(userId, parsed.data.shippingAddress);
+
+      // Fire-and-forget: notify Admin via RabbitMQ (non-blocking)
+      void publishOrderCreated({
+        OrderId:         result.id,
+        UserId:          userId,
+        Total:           result.total,
+        ItemCount:       result.items?.length ?? 0,
+        CreatedAt:       result.createdAt.toISOString(),
+        ShippingAddress: result.shippingAddress
+      });
+
       res.status(201).json(result);
     } catch (err) {
       next(err);

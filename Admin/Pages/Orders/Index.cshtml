@@ -1,10 +1,23 @@
-@page
+﻿@page
 @using AdminPanel.Enums
 @model AdminPanel.Pages.Orders.IndexModel
 @{
     ViewData["Title"] = "Pedidos";
     Layout = "_AdminLayout";
 }
+
+<!-- Toast container for live order notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1100">
+    <div id="newOrderToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold">
+                <i class="bi bi-bag-check-fill me-2"></i>
+                <span id="toastOrderBody">Nuevo pedido recibido</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
 
 <div class="page-header">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -246,5 +259,35 @@
                 console.error('Error:', error);
             });
         }
+        //  SignalR: live new-order notifications 
+        (function () {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js';
+            script.onload = function () {
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/orderHub')
+                    .withAutomaticReconnect()
+                    .build();
+
+                connection.on('NewOrderReceived', function (data) {
+                    const body = document.getElementById('toastOrderBody');
+                    if (body) {
+                        const artículo = data.itemCount === 1 ? 'artículo' : 'artículos';
+                        body.textContent = `Nuevo pedido #${data.orderId}  ${Number(data.total).toFixed(2)} (${data.itemCount} ${artículo})`;
+                    }
+                    const toastEl = document.getElementById('newOrderToast');
+                    if (toastEl) {
+                        const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+                        toast.show();
+                    }
+                    setTimeout(function () { location.reload(); }, 4000);
+                });
+
+                connection.start()
+                    .then(() => console.log('SignalR connected to /orderHub'))
+                    .catch(err => console.warn('SignalR connection failed:', err));
+            };
+            document.head.appendChild(script);
+        })();
     </script>
 }

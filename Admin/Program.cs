@@ -1,6 +1,8 @@
 using AdminPanel.Data;
+using AdminPanel.Hubs;
 using AdminPanel.Models;
 using AdminPanel.Services;
+using AdminPanel.Services.Messaging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,6 +34,9 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddSingleton<IOrderEventPublisher, RabbitMqOrderEventPublisher>();
+builder.Services.AddHostedService<OrderCreatedConsumer>();
+builder.Services.AddSignalR();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -91,6 +96,9 @@ app.MapControllerRoute(
 
 // Map Razor Pages (for Account/Auth)
 app.MapRazorPages();
+
+// SignalR hub
+app.MapHub<OrderHub>("/orderHub");
 
 app.Run();
 

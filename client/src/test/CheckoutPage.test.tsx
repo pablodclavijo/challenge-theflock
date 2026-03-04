@@ -11,6 +11,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { CheckoutPage } from '../pages/CheckoutPage';
+import { OrderStatus } from '../types/order';
 
 // ─── mocks ───────────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ const ITEMS = [
 
 const ORDER = {
   id: 42,
-  status: 'Pendiente',
+  status: OrderStatus.Pending,
   subtotal: 100,
   tax: 21,
   total: 121,
@@ -67,14 +68,14 @@ const ORDER = {
 
 const PAYMENT_APPROVED = {
   orderId: 42,
-  status: 'Pagado',
+  status: OrderStatus.Paid,
   transactionId: 'txn_approved_42_123',
   message: 'Pago aprobado',
 };
 
 const PAYMENT_REJECTED = {
   orderId: 42,
-  status: 'PagoFallido',
+  status: OrderStatus.PaymentFailed,
   transactionId: 'txn_rejected_42_456',
   message: 'Pago rechazado por el emisor',
 };

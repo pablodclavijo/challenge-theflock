@@ -10,6 +10,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { OrderDetailPage } from '../pages/OrderDetailPage';
+import { OrderStatus } from '../types/order';
 
 // ─── mocks ───────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ const LINE_ITEMS = [
 
 const ORDER_PENDING = {
   id: 42,
-  status: 'Pendiente',
+  status: OrderStatus.Pending,
   subtotal: 100,
   tax: 21,
   total: 121,
@@ -54,17 +55,17 @@ const ORDER_PENDING = {
   items: LINE_ITEMS,
 };
 
-const ORDER_PAID = { ...ORDER_PENDING, status: 'Pagado' };
-const ORDER_FAILED = { ...ORDER_PENDING, status: 'PagoFallido' };
-const ORDER_SHIPPED = { ...ORDER_PENDING, status: 'Enviado' };
+const ORDER_PAID = { ...ORDER_PENDING, status: OrderStatus.Paid };
+const ORDER_FAILED = { ...ORDER_PENDING, status: OrderStatus.PaymentFailed };
+const ORDER_SHIPPED = { ...ORDER_PENDING, status: OrderStatus.Shipped };
 
 const PAYMENT_APPROVED = {
-  orderId: 42, status: 'Pagado',
+  orderId: 42, status: OrderStatus.Paid,
   transactionId: 'txn_approved_42_123', message: 'Pago aprobado',
 };
 
 const PAYMENT_REJECTED = {
-  orderId: 42, status: 'PagoFallido',
+  orderId: 42, status: OrderStatus.PaymentFailed,
   transactionId: 'txn_rejected_42_456', message: 'Pago rechazado por el emisor',
 };
 

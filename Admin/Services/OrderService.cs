@@ -1,6 +1,7 @@
 using AdminPanel.Data;
 using AdminPanel.Enums;
 using AdminPanel.Models;
+using AdminPanel.Services.Messaging;
 using Microsoft.EntityFrameworkCore;
 
 namespace AdminPanel.Services
@@ -10,15 +11,18 @@ namespace AdminPanel.Services
         private readonly ApplicationDbContext _context;
         private readonly IProductService _productService;
         private readonly IStockMovementService _stockMovementService;
+        private readonly IOrderEventPublisher _eventPublisher;
 
         public OrderService(
             ApplicationDbContext context,
             IProductService productService,
-            IStockMovementService stockMovementService)
+            IStockMovementService stockMovementService,
+            IOrderEventPublisher eventPublisher)
         {
-            _context = context;
-            _productService = productService;
+            _context             = context;
+            _productService      = productService;
             _stockMovementService = stockMovementService;
+            _eventPublisher       = eventPublisher;
         }
 
         public async Task<Order?> GetOrderByIdAsync(int id)
@@ -77,10 +81,18 @@ namespace AdminPanel.Services
                 await DeductStockForOrderAsync(orderId, userId);
             }
 
-            order.Status = newStatus;
+            order.Status    = newStatus;
             order.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            await _eventPublisher.PublishOrderStatusChangedAsync(
+                new OrderStatusChangedEvent(
+                    OrderId:    orderId,
+                    OldStatus:  (int)oldStatus,
+                    NewStatus:  (int)newStatus,
+                    ChangedBy:  userId,
+                    Timestamp:  DateTime.UtcNow));
 
             return order;
         }

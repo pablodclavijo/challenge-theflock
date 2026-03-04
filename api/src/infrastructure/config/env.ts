@@ -23,5 +23,8 @@ export const env = {
   jwt: {
     secret: process.env.JWT_SECRET as string,
     expiresIn: process.env.JWT_EXPIRES_IN ?? "7d"
+  },
+  rabbitmq: {
+    url: process.env.RABBITMQ_URL ?? "amqp://guest:guest@localhost:5672"
   }
 };

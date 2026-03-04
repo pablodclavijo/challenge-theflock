@@ -4,11 +4,15 @@ import { env } from "./infrastructure/config/env";
 import { app } from "./presentation/http/app";
 import { buildSwaggerSpec } from "./config/swagger";
 import { generateSchemasFromDatabase } from "./config/schema-introspection";
+import { startOrderStatusConsumer } from "./infrastructure/messaging/order-status.consumer";
 
 const startServer = async (): Promise<void> => {
   try {
     await connectDatabase();
     console.log("Database connection successful");
+
+    // Start RabbitMQ consumer for order status changes from Admin
+    await startOrderStatusConsumer();
 
     // Introspect the live database and build the Swagger spec so every table —
     // including ones without a TypeScript model file — appears on restart.

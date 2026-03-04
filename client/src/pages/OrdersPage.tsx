@@ -3,7 +3,7 @@
  * Buyer's order history with status badges and pagination.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ShoppingBag,
@@ -21,8 +21,8 @@ import {
 import { apiClient } from "../services/api";
 import { ThemeToggle } from "../components/ui/theme-toggle";
 import { useAuthContext } from "../contexts/AuthContext";
-import type { Order, OrderStatus, OrderListResponse } from "../types/order";
-import { normalizeOrderStatus } from "../types/order";
+import type { Order, OrderListResponse } from "../types/order";
+import { OrderStatus } from "../types/order";
 
 /* ─── Status helpers ─── */
 
@@ -34,37 +34,37 @@ interface StatusMeta {
 
 function getStatusMeta(status: OrderStatus): StatusMeta {
   switch (status) {
-    case "Pendiente":
+    case OrderStatus.Pending:
       return {
         label: "Pendiente",
         icon: <Clock className="h-3 w-3" />,
         className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
       };
-    case "Pagado":
+    case OrderStatus.Paid:
       return {
         label: "Pagado",
         icon: <CheckCircle2 className="h-3 w-3" />,
         className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
       };
-    case "PagoFallido":
+    case OrderStatus.PaymentFailed:
       return {
         label: "Pago fallido",
         icon: <XCircle className="h-3 w-3" />,
         className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
       };
-    case "Confirmado":
+    case OrderStatus.Confirmed:
       return {
         label: "Confirmado",
         icon: <PackageCheck className="h-3 w-3" />,
         className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
       };
-    case "Enviado":
+    case OrderStatus.Shipped:
       return {
         label: "Enviado",
         icon: <Truck className="h-3 w-3" />,
         className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
       };
-    case "Entregado":
+    case OrderStatus.Delivered:
       return {
         label: "Entregado",
         icon: <Package className="h-3 w-3" />,
@@ -73,9 +73,8 @@ function getStatusMeta(status: OrderStatus): StatusMeta {
   }
 }
 
-export function StatusBadge({ status }: { status: OrderStatus | number | string }) {
-  const normalized = normalizeOrderStatus(status as OrderStatus | number);
-  const meta = getStatusMeta(normalized);
+export function StatusBadge({ status }: { status: OrderStatus | number }) {
+  const meta = getStatusMeta(status as OrderStatus);
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${meta?.className ?? 'bg-secondary text-muted-foreground'}`}>
       {meta?.icon}
@@ -104,6 +103,8 @@ export function OrdersPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pageRef = useRef(page);
 
   const fetchOrders = useCallback(async (p: number) => {
     setLoading(true);
@@ -120,6 +121,21 @@ export function OrdersPage() {
     }
   }, []);
 
+  // Keep pageRef in sync so the polling closure always uses the latest page
+  useEffect(() => { pageRef.current = page; }, [page]);
+
+  // Silent background poll — no loading spinner
+  const silentFetchOrders = useCallback(async () => {
+    try {
+      const res: OrderListResponse = await apiClient.getOrders({ page: pageRef.current, limit: LIMIT });
+      setOrders(res.data);
+      setTotal(res.total);
+      setTotalPages(res.totalPages);
+    } catch {
+      // ignore poll errors silently
+    }
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -127,6 +143,15 @@ export function OrdersPage() {
     }
     fetchOrders(page);
   }, [isAuthenticated, page, fetchOrders, navigate]);
+
+  // Start polling on mount, stop on unmount
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    pollRef.current = setInterval(silentFetchOrders, 15_000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [isAuthenticated, silentFetchOrders]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,10 +168,11 @@ export function OrdersPage() {
           <h1 className="font-serif text-lg font-semibold text-foreground flex-1">Mis pedidos</h1>
           <button
             onClick={() => fetchOrders(page)}
-            className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
+            className="relative p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
             aria-label="Actualizar"
           >
             <RefreshCw className="h-4 w-4" />
+            <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
           </button>
           <ThemeToggle />
         </div>

@@ -9,6 +9,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { OrdersPage } from '../pages/OrdersPage';
+import { OrderStatus } from '../types/order';
 
 // ─── mocks ───────────────────────────────────────────────────────────────────
 
@@ -39,12 +40,12 @@ const BASE_ORDER = {
 };
 
 const ORDERS = [
-  { id: 1, status: 'Pendiente',   ...BASE_ORDER },
-  { id: 2, status: 'Pagado',      ...BASE_ORDER },
-  { id: 3, status: 'PagoFallido', ...BASE_ORDER },
-  { id: 4, status: 'Confirmado',  ...BASE_ORDER },
-  { id: 5, status: 'Enviado',     ...BASE_ORDER },
-  { id: 6, status: 'Entregado',   ...BASE_ORDER },
+  { id: 1, status: OrderStatus.Pending,       ...BASE_ORDER },
+  { id: 2, status: OrderStatus.Paid,          ...BASE_ORDER },
+  { id: 3, status: OrderStatus.PaymentFailed, ...BASE_ORDER },
+  { id: 4, status: OrderStatus.Confirmed,     ...BASE_ORDER },
+  { id: 5, status: OrderStatus.Shipped,       ...BASE_ORDER },
+  { id: 6, status: OrderStatus.Delivered,     ...BASE_ORDER },
 ];
 
 const EMPTY_RESPONSE = { data: [], total: 0, page: 1, limit: 10, totalPages: 1 };

@@ -3,7 +3,7 @@
  * Shows full detail of a single order + option to retry payment.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -17,7 +17,7 @@ import { apiClient } from "../services/api";
 import { ThemeToggle } from "../components/ui/theme-toggle";
 import { useAuthContext } from "../contexts/AuthContext";
 import type { Order, PaymentResult } from "../types/order";
-import { isPaymentApproved, normalizeOrderStatus } from "../types/order";
+import { isPaymentApproved, OrderStatus } from "../types/order";
 import { StatusBadge } from "./OrdersPage";
 
 const formatPrice = (price: number) =>
@@ -43,6 +43,7 @@ export function OrderDetailPage() {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [paymentError, setPaymentError] = useState("");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -66,6 +67,32 @@ export function OrderDetailPage() {
       setLoading(false);
     }
   };
+
+  // Silent background re-fetch (no loading spinner)
+  const silentFetch = useCallback(async () => {
+    if (!id) return;
+    try {
+      const data: Order = await apiClient.getOrderById(id);
+      setOrder(data);
+    } catch {
+      // ignore poll errors silently
+    }
+  }, [id]);
+
+  // Start/stop polling based on current status (stop only when Delivered)
+  useEffect(() => {
+    if (!order) return;
+    if (order.status === OrderStatus.Delivered) {
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = null;
+      return;
+    }
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(silentFetch, 10_000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [order?.status, silentFetch]);
 
   const handleRetryPayment = async () => {
     if (!order) return;
@@ -109,8 +136,7 @@ export function OrderDetailPage() {
     );
   }
 
-  const normalizedStatus = normalizeOrderStatus(order.status);
-  const canRetryPayment = normalizedStatus === "Pendiente" || normalizedStatus === "PagoFallido";
+  const canRetryPayment = order.status === OrderStatus.Pending || order.status === OrderStatus.PaymentFailed;
 
   return (
     <div className="min-h-screen bg-background">
@@ -129,10 +155,13 @@ export function OrderDetailPage() {
           </h1>
           <button
             onClick={fetchOrder}
-            className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
+            className="relative p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground"
             aria-label="Actualizar"
           >
             <RefreshCw className="h-4 w-4" />
+            {order && order.status !== OrderStatus.Delivered && (
+              <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+            )}
           </button>
           <ThemeToggle />
         </div>
