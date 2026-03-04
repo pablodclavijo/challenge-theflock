@@ -45,6 +45,8 @@ namespace AdminPanel.Services
                 ConfirmedOrders = await _orderService.GetOrderCountByStatusAsync(OrderStatus.Confirmed),
                 ShippedOrders = await _orderService.GetOrderCountByStatusAsync(OrderStatus.Shipped),
                 DeliveredOrders = await _orderService.GetOrderCountByStatusAsync(OrderStatus.Delivered),
+                PaidOrders = await _orderService.GetOrderCountByStatusAsync(OrderStatus.Paid),
+                PaymentFailedOrders = await _orderService.GetOrderCountByStatusAsync(OrderStatus.PaymentFailed),
 
                 TopProducts = await _orderService.GetTopSellingProductsAsync(10)
             };

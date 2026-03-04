@@ -22,6 +22,8 @@ namespace AdminPanel.Services
         public int ConfirmedOrders { get; set; }
         public int ShippedOrders { get; set; }
         public int DeliveredOrders { get; set; }
+        public int PaidOrders { get; set; }
+        public int PaymentFailedOrders { get; set; }
         public List<TopProductDto> TopProducts { get; set; } = new();
     }
 }

@@ -72,7 +72,7 @@ namespace AdminPanel.Services
                 throw new InvalidOperationException($"No se puede cambiar el estado de {oldStatus} a {newStatus}");
             }
 
-            if (newStatus == OrderStatus.Confirmed && oldStatus == OrderStatus.Pending)
+            if (newStatus == OrderStatus.Confirmed && oldStatus == OrderStatus.Paid)
             {
                 await DeductStockForOrderAsync(orderId, userId);
             }
@@ -118,7 +118,7 @@ namespace AdminPanel.Services
                     newStock,
                     item.Quantity,
                     "OrderConfirmation",
-                    $"Descuento por confirmación de pedido #{orderId}",
+                    $"Descuento por confirmaciï¿½n de pedido #{orderId}",
                     userId);
             }
 
@@ -128,7 +128,7 @@ namespace AdminPanel.Services
         public async Task<decimal> GetSalesByPeriodAsync(DateTime from, DateTime to)
         {
             return await _context.Orders
-                .Where(o => o.CreatedAt >= from && o.CreatedAt <= to && o.Status == OrderStatus.Delivered)
+                .Where(o => o.CreatedAt >= from && o.CreatedAt <= to && (o.Status == OrderStatus.Delivered || o.Status == OrderStatus.Paid))
                 .SumAsync(o => (decimal?)o.Total) ?? 0;
         }
 
@@ -156,7 +156,10 @@ namespace AdminPanel.Services
         {
             return (from, to) switch
             {
-                (OrderStatus.Pending, OrderStatus.Confirmed) => true,
+                (OrderStatus.Pending, OrderStatus.Paid) => true,
+                (OrderStatus.Pending, OrderStatus.PaymentFailed) => true,
+                (OrderStatus.PaymentFailed, OrderStatus.Paid) => true,
+                (OrderStatus.Paid, OrderStatus.Confirmed) => true,
                 (OrderStatus.Confirmed, OrderStatus.Shipped) => true,
                 (OrderStatus.Shipped, OrderStatus.Delivered) => true,
                 _ => false

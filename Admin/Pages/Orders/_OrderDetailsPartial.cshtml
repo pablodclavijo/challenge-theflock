@@ -8,6 +8,8 @@
         OrderStatus.Confirmed => "info",
         OrderStatus.Shipped => "primary",
         OrderStatus.Delivered => "success",
+        OrderStatus.Paid => "success",
+        OrderStatus.PaymentFailed => "danger",
         _ => "secondary"
     };
     var statusText = Model.Status switch
@@ -16,6 +18,8 @@
         OrderStatus.Confirmed => "Confirmado",
         OrderStatus.Shipped => "Enviado",
         OrderStatus.Delivered => "Entregado",
+        OrderStatus.Paid => "Pagado",
+        OrderStatus.PaymentFailed => "Pago Fallido",
         _ => Model.Status.ToString()
     };
 }
@@ -40,7 +44,7 @@
         <p class="mb-1"><strong>Email:</strong> @Model.User.Email</p>
     </div>
     <div class="col-md-6">
-        <p class="mb-1"><strong>Dirección de envío:</strong></p>
+        <p class="mb-1"><strong>Direcciï¿½n de envï¿½o:</strong></p>
         <p class="mb-1">@Model.ShippingAddress</p>
     </div>
 </div>
@@ -100,15 +104,32 @@
 <div class="d-flex justify-content-between align-items-center">
     <div>
         @{
-            var canConfirm = Model.Status == OrderStatus.Pending;
+            var canPay = Model.Status == OrderStatus.Pending;
+            var canRetryPayment = Model.Status == OrderStatus.PaymentFailed;
+            var canConfirm = Model.Status == OrderStatus.Paid;
             var canShip = Model.Status == OrderStatus.Confirmed;
             var canDeliver = Model.Status == OrderStatus.Shipped;
         }
 
-        @if (canConfirm || canShip || canDeliver)
+        @if (canPay || canRetryPayment || canConfirm || canShip || canDeliver)
         {
             <p class="mb-2"><strong>Cambiar estado:</strong></p>
             <div class="btn-group btn-group-sm">
+                @if (canPay)
+                {
+                    <button type="button" class="btn btn-success" onclick="changeOrderStatus(@Model.Id, @((int)OrderStatus.Paid))">
+                        <i class="bi bi-cash-coin"></i> Pagado
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="changeOrderStatus(@Model.Id, @((int)OrderStatus.PaymentFailed))">
+                        <i class="bi bi-x-circle"></i> Pago Fallido
+                    </button>
+                }
+                @if (canRetryPayment)
+                {
+                    <button type="button" class="btn btn-success" onclick="changeOrderStatus(@Model.Id, @((int)OrderStatus.Paid))">
+                        <i class="bi bi-arrow-repeat"></i> Reintentar Pago
+                    </button>
+                }
                 @if (canConfirm)
                 {
                     <button type="button" class="btn btn-info" onclick="changeOrderStatus(@Model.Id, @((int)OrderStatus.Confirmed))">
@@ -130,13 +151,13 @@
             </div>
             @if (canConfirm)
             {
-                <p class="text-muted small mt-2 mb-0">* Al confirmar se descontará el stock automáticamente</p>
+                <p class="text-muted small mt-2 mb-0">* Al confirmar se descontarï¿½ el stock automï¿½ticamente</p>
             }
         }
         else
         {
             <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle"></i> El pedido ya está en su estado final.
+                <i class="bi bi-info-circle"></i> El pedido ya estï¿½ en su estado final.
             </div>
         }
     </div>

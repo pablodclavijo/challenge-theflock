@@ -16,7 +16,7 @@ namespace AdminPanel.Data
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            // Asegurar que la base de datos esté creada
+            // Asegurar que la base de datos estï¿½ creada
             await context.Database.MigrateAsync();
 
             // Crear roles
@@ -25,7 +25,7 @@ namespace AdminPanel.Data
             // Crear usuarios
             var users = await SeedUsersAsync(userManager);
 
-            // Crear categorías
+            // Crear categorï¿½as
             var categories = await SeedCategoriesAsync(context);
 
             // Crear productos
@@ -67,9 +67,9 @@ namespace AdminPanel.Data
             // 3 Vendedores
             var vendedores = new[]
             {
-                ("vendedor1@tienda.com", "Carlos Martínez", "Av. Comercio 456, Local 5"),
-                ("vendedor2@tienda.com", "Ana García", "Plaza Central 789, Piso 2"),
-                ("vendedor3@tienda.com", "Luis Rodríguez", "Calle del Mercado 321, Oficina 10")
+                ("vendedor1@tienda.com", "Carlos Martï¿½nez", "Av. Comercio 456, Local 5"),
+                ("vendedor2@tienda.com", "Ana Garcï¿½a", "Plaza Central 789, Piso 2"),
+                ("vendedor3@tienda.com", "Luis Rodrï¿½guez", "Calle del Mercado 321, Oficina 10")
             };
 
             for (int i = 0; i < vendedores.Length; i++)
@@ -82,11 +82,11 @@ namespace AdminPanel.Data
             // 5 Compradores
             var compradores = new[]
             {
-                ("comprador1@email.com", "María López", "Residencial Los Pinos 123"),
-                ("comprador2@email.com", "Juan Pérez", "Urbanización El Rosal 456"),
-                ("comprador3@email.com", "Patricia Sánchez", "Conjunto Habitacional Vista Hermosa 789"),
-                ("comprador4@email.com", "Roberto González", "Barrio San José 234"),
-                ("comprador5@email.com", "Laura Fernández", "Colonia Primavera 567")
+                ("comprador1@email.com", "Marï¿½a Lï¿½pez", "Residencial Los Pinos 123"),
+                ("comprador2@email.com", "Juan Pï¿½rez", "Urbanizaciï¿½n El Rosal 456"),
+                ("comprador3@email.com", "Patricia Sï¿½nchez", "Conjunto Habitacional Vista Hermosa 789"),
+                ("comprador4@email.com", "Roberto Gonzï¿½lez", "Barrio San Josï¿½ 234"),
+                ("comprador5@email.com", "Laura Fernï¿½ndez", "Colonia Primavera 567")
             };
 
             for (int i = 0; i < compradores.Length; i++)
@@ -142,7 +142,7 @@ namespace AdminPanel.Data
 
             var categories = new List<Category>
             {
-                new Category { Name = "Electrónica", IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-60) },
+                new Category { Name = "Electrï¿½nica", IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-60) },
                 new Category { Name = "Ropa y Moda", IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-55) },
                 new Category { Name = "Hogar y Cocina", IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-50) },
                 new Category { Name = "Deportes", IsActive = true, CreatedAt = DateTime.UtcNow.AddDays(-45) },
@@ -167,15 +167,15 @@ namespace AdminPanel.Data
             var products = new List<Product>();
             var now = DateTime.UtcNow;
 
-            // Electrónica (6 productos)
-            var electronicsId = categories.First(c => c.Name == "Electrónica").Id;
+            // Electrï¿½nica (6 productos)
+            var electronicsId = categories.First(c => c.Name == "Electrï¿½nica").Id;
             products.AddRange(new[]
             {
                 new Product { Name = "Laptop HP 15", Description = "Laptop HP con procesador Intel Core i5, 8GB RAM, 256GB SSD", Price = 799.99m, Stock = 15, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-50), UpdatedAt = now.AddDays(-50) },
-                new Product { Name = "Mouse Logitech MX Master 3", Description = "Mouse inalámbrico ergonómico de alta precisión", Price = 99.99m, Stock = 30, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-48), UpdatedAt = now.AddDays(-48) },
-                new Product { Name = "Teclado Mecánico Razer", Description = "Teclado mecánico RGB con switches Cherry MX", Price = 149.99m, Stock = 20, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-46), UpdatedAt = now.AddDays(-46) },
+                new Product { Name = "Mouse Logitech MX Master 3", Description = "Mouse inalï¿½mbrico ergonï¿½mico de alta precisiï¿½n", Price = 99.99m, Stock = 30, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-48), UpdatedAt = now.AddDays(-48) },
+                new Product { Name = "Teclado Mecï¿½nico Razer", Description = "Teclado mecï¿½nico RGB con switches Cherry MX", Price = 149.99m, Stock = 20, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-46), UpdatedAt = now.AddDays(-46) },
                 new Product { Name = "Monitor Samsung 27\"", Description = "Monitor Full HD 1920x1080, 75Hz, panel IPS", Price = 249.99m, Stock = 12, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-44), UpdatedAt = now.AddDays(-44) },
-                new Product { Name = "Auriculares Sony WH-1000XM4", Description = "Auriculares inalámbricos con cancelación de ruido", Price = 349.99m, Stock = 8, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-42), UpdatedAt = now.AddDays(-42) },
+                new Product { Name = "Auriculares Sony WH-1000XM4", Description = "Auriculares inalï¿½mbricos con cancelaciï¿½n de ruido", Price = 349.99m, Stock = 8, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-42), UpdatedAt = now.AddDays(-42) },
                 new Product { Name = "Webcam Logitech C920", Description = "Webcam Full HD 1080p para streaming", Price = 79.99m, Stock = 25, CategoryId = electronicsId, IsActive = true, CreatedAt = now.AddDays(-40), UpdatedAt = now.AddDays(-40) }
             });
 
@@ -183,9 +183,9 @@ namespace AdminPanel.Data
             var ropaId = categories.First(c => c.Name == "Ropa y Moda").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Camiseta Nike Deportiva", Description = "Camiseta de algodón 100% disponible en varios colores", Price = 29.99m, Stock = 50, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-38), UpdatedAt = now.AddDays(-38) },
-                new Product { Name = "Jeans Levi's 501", Description = "Jeans clásicos de corte recto, tela denim premium", Price = 89.99m, Stock = 35, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-36), UpdatedAt = now.AddDays(-36) },
-                new Product { Name = "Zapatillas Adidas Running", Description = "Zapatillas deportivas con tecnología Boost", Price = 129.99m, Stock = 28, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-34), UpdatedAt = now.AddDays(-34) },
+                new Product { Name = "Camiseta Nike Deportiva", Description = "Camiseta de algodï¿½n 100% disponible en varios colores", Price = 29.99m, Stock = 50, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-38), UpdatedAt = now.AddDays(-38) },
+                new Product { Name = "Jeans Levi's 501", Description = "Jeans clï¿½sicos de corte recto, tela denim premium", Price = 89.99m, Stock = 35, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-36), UpdatedAt = now.AddDays(-36) },
+                new Product { Name = "Zapatillas Adidas Running", Description = "Zapatillas deportivas con tecnologï¿½a Boost", Price = 129.99m, Stock = 28, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-34), UpdatedAt = now.AddDays(-34) },
                 new Product { Name = "Chaqueta North Face", Description = "Chaqueta impermeable para exteriores", Price = 199.99m, Stock = 18, CategoryId = ropaId, IsActive = true, CreatedAt = now.AddDays(-32), UpdatedAt = now.AddDays(-32) }
             });
 
@@ -193,7 +193,7 @@ namespace AdminPanel.Data
             var hogarId = categories.First(c => c.Name == "Hogar y Cocina").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Cafetera Nespresso", Description = "Cafetera de cápsulas con sistema de extracción de 19 bares", Price = 149.99m, Stock = 22, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-30), UpdatedAt = now.AddDays(-30) },
+                new Product { Name = "Cafetera Nespresso", Description = "Cafetera de cï¿½psulas con sistema de extracciï¿½n de 19 bares", Price = 149.99m, Stock = 22, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-30), UpdatedAt = now.AddDays(-30) },
                 new Product { Name = "Licuadora Oster", Description = "Licuadora de 1200W con jarra de vidrio de 2L", Price = 79.99m, Stock = 30, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-28), UpdatedAt = now.AddDays(-28) },
                 new Product { Name = "Set de Ollas Tramontina", Description = "Set de 5 ollas de acero inoxidable", Price = 199.99m, Stock = 15, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-26), UpdatedAt = now.AddDays(-26) },
                 new Product { Name = "Aspiradora Robot Roomba", Description = "Aspiradora robot con mapeo inteligente y WiFi", Price = 399.99m, Stock = 10, CategoryId = hogarId, IsActive = true, CreatedAt = now.AddDays(-24), UpdatedAt = now.AddDays(-24) }
@@ -203,7 +203,7 @@ namespace AdminPanel.Data
             var deportesId = categories.First(c => c.Name == "Deportes").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Bicicleta de Montaña", Description = "Bicicleta MTB 21 velocidades, frenos de disco", Price = 499.99m, Stock = 8, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-22), UpdatedAt = now.AddDays(-22) },
+                new Product { Name = "Bicicleta de Montaï¿½a", Description = "Bicicleta MTB 21 velocidades, frenos de disco", Price = 499.99m, Stock = 8, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-22), UpdatedAt = now.AddDays(-22) },
                 new Product { Name = "Mancuernas Ajustables 20kg", Description = "Par de mancuernas ajustables de 5 a 20kg", Price = 149.99m, Stock = 20, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-20), UpdatedAt = now.AddDays(-20) },
                 new Product { Name = "Colchoneta de Yoga", Description = "Colchoneta antideslizante con bolsa de transporte", Price = 39.99m, Stock = 45, CategoryId = deportesId, IsActive = true, CreatedAt = now.AddDays(-18), UpdatedAt = now.AddDays(-18) }
             });
@@ -212,26 +212,26 @@ namespace AdminPanel.Data
             var librosId = categories.First(c => c.Name == "Libros").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Clean Code - Robert Martin", Description = "Guía práctica de desarrollo de software ágil", Price = 49.99m, Stock = 25, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-16), UpdatedAt = now.AddDays(-16) },
-                new Product { Name = "El Principito", Description = "Clásico de la literatura universal, edición ilustrada", Price = 19.99m, Stock = 40, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-14), UpdatedAt = now.AddDays(-14) },
-                new Product { Name = "Cien Años de Soledad", Description = "Obra maestra de Gabriel García Márquez", Price = 29.99m, Stock = 35, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-12), UpdatedAt = now.AddDays(-12) }
+                new Product { Name = "Clean Code - Robert Martin", Description = "Guï¿½a prï¿½ctica de desarrollo de software ï¿½gil", Price = 49.99m, Stock = 25, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-16), UpdatedAt = now.AddDays(-16) },
+                new Product { Name = "El Principito", Description = "Clï¿½sico de la literatura universal, ediciï¿½n ilustrada", Price = 19.99m, Stock = 40, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-14), UpdatedAt = now.AddDays(-14) },
+                new Product { Name = "Cien Aï¿½os de Soledad", Description = "Obra maestra de Gabriel Garcï¿½a Mï¿½rquez", Price = 29.99m, Stock = 35, CategoryId = librosId, IsActive = true, CreatedAt = now.AddDays(-12), UpdatedAt = now.AddDays(-12) }
             });
 
             // Juguetes (2 productos)
             var juguetesId = categories.First(c => c.Name == "Juguetes").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "LEGO Star Wars Millennium Falcon", Description = "Set de construcción LEGO de 1351 piezas", Price = 159.99m, Stock = 12, CategoryId = juguetesId, IsActive = true, CreatedAt = now.AddDays(-10), UpdatedAt = now.AddDays(-10) },
-                new Product { Name = "Muñeca Barbie Dreamhouse", Description = "Casa de muñecas con 8 habitaciones y accesorios", Price = 199.99m, Stock = 10, CategoryId = juguetesId, IsActive = true, CreatedAt = now.AddDays(-8), UpdatedAt = now.AddDays(-8) }
+                new Product { Name = "LEGO Star Wars Millennium Falcon", Description = "Set de construcciï¿½n LEGO de 1351 piezas", Price = 159.99m, Stock = 12, CategoryId = juguetesId, IsActive = true, CreatedAt = now.AddDays(-10), UpdatedAt = now.AddDays(-10) },
+                new Product { Name = "Muï¿½eca Barbie Dreamhouse", Description = "Casa de muï¿½ecas con 8 habitaciones y accesorios", Price = 199.99m, Stock = 10, CategoryId = juguetesId, IsActive = true, CreatedAt = now.AddDays(-8), UpdatedAt = now.AddDays(-8) }
             });
 
             // Belleza y Salud (3 productos)
             var bellezaId = categories.First(c => c.Name == "Belleza y Salud").Id;
             products.AddRange(new[]
             {
-                new Product { Name = "Perfume Chanel No. 5", Description = "Eau de Parfum 100ml, fragancia clásica", Price = 149.99m, Stock = 18, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-6), UpdatedAt = now.AddDays(-6) },
-                new Product { Name = "Kit de Cuidado Facial Neutrogena", Description = "Set completo de limpieza e hidratación facial", Price = 59.99m, Stock = 30, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-4), UpdatedAt = now.AddDays(-4) },
-                new Product { Name = "Cepillo Eléctrico Oral-B", Description = "Cepillo dental eléctrico recargable con temporizador", Price = 89.99m, Stock = 22, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-2), UpdatedAt = now.AddDays(-2) }
+                new Product { Name = "Perfume Chanel No. 5", Description = "Eau de Parfum 100ml, fragancia clï¿½sica", Price = 149.99m, Stock = 18, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-6), UpdatedAt = now.AddDays(-6) },
+                new Product { Name = "Kit de Cuidado Facial Neutrogena", Description = "Set completo de limpieza e hidrataciï¿½n facial", Price = 59.99m, Stock = 30, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-4), UpdatedAt = now.AddDays(-4) },
+                new Product { Name = "Cepillo Elï¿½ctrico Oral-B", Description = "Cepillo dental elï¿½ctrico recargable con temporizador", Price = 89.99m, Stock = 22, CategoryId = bellezaId, IsActive = true, CreatedAt = now.AddDays(-2), UpdatedAt = now.AddDays(-2) }
             });
 
             await context.Products.AddRangeAsync(products);
@@ -289,8 +289,9 @@ namespace AdminPanel.Data
 
                 // Determinar estado basado en la fecha del pedido
                 var status = orderDate < now.AddDays(-20) ? OrderStatus.Delivered :
-                            orderDate < now.AddDays(-10) ? OrderStatus.Shipped :
-                            orderDate < now.AddDays(-5) ? OrderStatus.Confirmed :
+                            orderDate < now.AddDays(-15) ? OrderStatus.Shipped :
+                            orderDate < now.AddDays(-10) ? OrderStatus.Confirmed :
+                            orderDate < now.AddDays(-5) ? OrderStatus.Paid :
                             OrderStatus.Pending;
 
                 var order = new Order
@@ -300,7 +301,7 @@ namespace AdminPanel.Data
                     Subtotal = subtotal,
                     Tax = tax,
                     Total = total,
-                    ShippingAddress = comprador.ShippingAddress ?? "Dirección no especificada",
+                    ShippingAddress = comprador.ShippingAddress ?? "Direcciï¿½n no especificada",
                     CreatedAt = orderDate,
                     UpdatedAt = status == OrderStatus.Delivered ? orderDate.AddDays(7) : orderDate,
                     Items = items

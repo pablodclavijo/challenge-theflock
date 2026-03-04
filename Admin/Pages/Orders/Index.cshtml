@@ -36,6 +36,8 @@
                         <option value="@OrderStatus.Confirmed" selected="@(Model.CurrentStatusFilter == OrderStatus.Confirmed.ToString())">Confirmado</option>
                         <option value="@OrderStatus.Shipped" selected="@(Model.CurrentStatusFilter == OrderStatus.Shipped.ToString())">Enviado</option>
                         <option value="@OrderStatus.Delivered" selected="@(Model.CurrentStatusFilter == OrderStatus.Delivered.ToString())">Entregado</option>
+                        <option value="@OrderStatus.Paid" selected="@(Model.CurrentStatusFilter == OrderStatus.Paid.ToString())">Pagado</option>
+                        <option value="@OrderStatus.PaymentFailed" selected="@(Model.CurrentStatusFilter == OrderStatus.PaymentFailed.ToString())">Pago Fallido</option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -68,6 +70,8 @@
                     OrderStatus.Confirmed => "info",
                     OrderStatus.Shipped => "primary",
                     OrderStatus.Delivered => "success",
+                    OrderStatus.Paid => "success",
+                    OrderStatus.PaymentFailed => "danger",
                     _ => "secondary"
                 };
                 string statusText = status switch
@@ -76,6 +80,8 @@
                     OrderStatus.Confirmed => "Confirmado",
                     OrderStatus.Shipped => "Enviado",
                     OrderStatus.Delivered => "Entregado",
+                    OrderStatus.Paid => "Pagado",
+                    OrderStatus.PaymentFailed => "Pago Fallido",
                     _ => status.ToString()
                 };
                 return $"<span class='badge bg-{badgeClass}'>{statusText}</span>";
@@ -213,7 +219,7 @@
         }
 
         function changeOrderStatus(orderId, newStatus) {
-            if (!confirm('¿Está seguro de que desea cambiar el estado del pedido?')) {
+            if (!confirm('ï¿½Estï¿½ seguro de que desea cambiar el estado del pedido?')) {
                 return;
             }
 

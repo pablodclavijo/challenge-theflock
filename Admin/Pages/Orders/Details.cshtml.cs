@@ -73,6 +73,8 @@ namespace AdminPanel.Pages.Orders
                     OrderStatus.Confirmed => "confirmado",
                     OrderStatus.Shipped => "enviado",
                     OrderStatus.Delivered => "entregado",
+                    OrderStatus.Paid => "pagado",
+                    OrderStatus.PaymentFailed => "con pago fallido",
                     _ => "actualizado"
                 };
 

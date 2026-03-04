@@ -47,7 +47,7 @@
     <div class="col-lg-8">
         <div class="admin-card">
             <div class="admin-card-header">
-                <h2>Información del Pedido</h2>
+                <h2>Informaciï¿½n del Pedido</h2>
             </div>
             <div class="admin-card-body">
                 <div class="row mb-3">
@@ -60,6 +60,8 @@
                                 OrderStatus.Confirmed => "info",
                                 OrderStatus.Shipped => "primary",
                                 OrderStatus.Delivered => "success",
+                                OrderStatus.Paid => "success",
+                                OrderStatus.PaymentFailed => "danger",
                                 _ => "secondary"
                             };
                             var statusText = Model.Order.Status switch
@@ -68,14 +70,16 @@
                                 OrderStatus.Confirmed => "Confirmado",
                                 OrderStatus.Shipped => "Enviado",
                                 OrderStatus.Delivered => "Entregado",
+                                OrderStatus.Paid => "Pagado",
+                                OrderStatus.PaymentFailed => "Pago Fallido",
                                 _ => Model.Order.Status.ToString()
                             };
                         }
                         <span class="badge bg-@statusBadge fs-6">@statusText</span>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Fecha de creación:</strong> @Model.Order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
-                        <p><strong>Última actualización:</strong> @Model.Order.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p><strong>Fecha de creaciï¿½n:</strong> @Model.Order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p><strong>ï¿½ltima actualizaciï¿½n:</strong> @Model.Order.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</p>
                     </div>
                 </div>
 
@@ -144,7 +148,7 @@
             <div class="admin-card-body">
                 <p><strong>Nombre:</strong><br />@Model.Order.User.FullName</p>
                 <p><strong>Email:</strong><br />@Model.Order.User.Email</p>
-                <p><strong>Dirección de envío:</strong><br />@Model.Order.ShippingAddress</p>
+                <p><strong>Direcciï¿½n de envï¿½o:</strong><br />@Model.Order.ShippingAddress</p>
             </div>
         </div>
 
@@ -158,6 +162,9 @@
                     var canConfirm = Model.Order.Status == OrderStatus.Pending;
                     var canShip = Model.Order.Status == OrderStatus.Confirmed;
                     var canDeliver = Model.Order.Status == OrderStatus.Shipped;
+                    var canPay = Model.Order.Status == OrderStatus.Delivered;
+                    var canMarkPaymentFailed = Model.Order.Status == OrderStatus.Delivered;
+                    var canRetryPayment = Model.Order.Status == OrderStatus.PaymentFailed;
                 }
 
                 @if (canConfirm)
@@ -168,7 +175,7 @@
                         <button type="submit" class="btn btn-info w-100">
                             <i class="bi bi-check-circle"></i> Confirmar Pedido
                         </button>
-                        <small class="text-muted d-block mt-1">Se descontará el stock automáticamente</small>
+                        <small class="text-muted d-block mt-1">Se descontarï¿½ el stock automï¿½ticamente</small>
                     </form>
                 }
 
@@ -194,10 +201,39 @@
                     </form>
                 }
 
-                @if (!canConfirm && !canShip && !canDeliver)
+                @if (canPay)
+                {
+                    <form method="post" asp-page-handler="ChangeStatus" class="mb-2">
+                        <input type="hidden" name="orderId" value="@Model.Order.Id" />
+                        <input type="hidden" name="newStatus" value="@((int)OrderStatus.Paid)" />
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-cash-coin"></i> Marcar como Pagado
+                        </button>
+                    </form>
+                    <form method="post" asp-page-handler="ChangeStatus" class="mb-2">
+                        <input type="hidden" name="orderId" value="@Model.Order.Id" />
+                        <input type="hidden" name="newStatus" value="@((int)OrderStatus.PaymentFailed)" />
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="bi bi-x-circle"></i> Marcar Pago Fallido
+                        </button>
+                    </form>
+                }
+
+                @if (canRetryPayment)
+                {
+                    <form method="post" asp-page-handler="ChangeStatus" class="mb-2">
+                        <input type="hidden" name="orderId" value="@Model.Order.Id" />
+                        <input type="hidden" name="newStatus" value="@((int)OrderStatus.Paid)" />
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-arrow-repeat"></i> Reintentar Pago
+                        </button>
+                    </form>
+                }
+
+                @if (!canConfirm && !canShip && !canDeliver && !canPay && !canRetryPayment)
                 {
                     <div class="alert alert-info mb-0">
-                        <i class="bi bi-info-circle"></i> El pedido ya está en su estado final.
+                        <i class="bi bi-info-circle"></i> El pedido ya estï¿½ en su estado final.
                     </div>
                 }
 
@@ -206,7 +242,7 @@
                 <div class="small text-muted">
                     <p class="mb-1"><strong>Flujo de estados:</strong></p>
                     <p class="mb-0">
-                        Pendiente ? Confirmado ? Enviado ? Entregado
+                        Pendiente &rarr; Pagado / Pago Fallido &rarr; Confirmado &rarr; Enviado &rarr; Entregado
                     </p>
                 </div>
             </div>
